@@ -3,34 +3,42 @@
 ### 2024-04-26
 ###
 
-## 03 PLOTS ####
+# 03 PLOTS ####
 
 
-
-## 03.1 PACKAGES ####
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# PACKAGES ####
 
 source(file = "scripts/01_packages.R")
 
 
-## 03.2 DATA ####
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# DATA ####
 
 source(file = "scripts/02_data.R")
 
 
-## 03.3 PLOTS ####
 
 
-### APPLICATIONS ####
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# TIME PLOTS ####
+
+
+## ~ APPLICATIONS ####
 
 # this is the legend title with correct notation
-title_exp <- expression(Spray~and~Fertiliser~Plan~Expenditure~('£'~ha^{-1})) 
+title_exp <- expression(Application~Expenditure~('£'~ha^{-1})) 
 y_title <- expression('£'~ha^{-1})
 
 # date_range object
 date_range <- which(app_dat$Date %in% as.Date(
   c("2022-03-01", "2022-10-01")) )
 
-
+app_time_plot <-
 ggplot(data = app_dat,
        aes(x = Date, 
            y = accumulated_cost_ha, 
@@ -40,43 +48,58 @@ ggplot(data = app_dat,
             show.legend = TRUE) +
   geom_point(color = "black", 
              size = 1) +
-  theme(
-    legend.position = c(.95, .25),
-    legend.justification = c("right", "top"),
-    legend.box.just = "right",
-    legend.margin = margin(6, 6, 6, 6),
-    legend.title = element_text(face = "bold"),
-    aspect.ratio = 1/1.5, 
-    panel.background = element_rect(fill = "white", 
-                                    linetype = 1, 
-                                    color = "black")) + 
-  scale_color_manual(values = c("turquoise3", "tomato2")) +
+  scale_color_manual(values = c("tomato2", "turquoise3")) +
   labs(
     x = "Date",
     y = y_title,
-    title = "Harper Adams Conservation Agriculture Experiment", 
-    subtitle = title_exp, 
-    caption = "All prices from invoices") +
+    subtitle = title_exp) +
+  ylim(0,2500) +
+  scale_x_date(limits = c(as.Date("2022-01-01"), as.Date("2024-10-01"))) +
   geom_vline(xintercept = as.numeric(as.Date("2022-10-03")),  # Example date for the vertical line
              linetype = "dashed",
              color = "black") +
   geom_vline(xintercept = as.numeric(as.Date("2023-08-20")),  # Example date for the vertical line
              linetype = "dashed",
              color = "black") +
-  annotate(geom = "text", x = as.Date("2022-03-05"),
-           y = 800, label = "Spring Beans", fontface = "bold") +
-  annotate(geom = "text", x = as.Date("2023-01-05"),
-           y = 800, label = "Winter Wheat", fontface = "bold") 
+  geom_vline(xintercept = as.numeric(as.Date("2024-03-15")),  # Example date for the vertical line
+             linetype = "dashed",
+             color = "turquoise3") +
+  annotate(geom = "text", 
+           x = as.Date("2022-04-05"),
+           y = 2500, 
+           label = "Spring Beans", 
+           fontface = "bold") +
+  annotate(geom = "text", 
+           x = as.Date("2023-02-05"),
+           y = 2500, 
+           label = "Winter Wheat", 
+           fontface = "bold") +
+  annotate(geom = "text", 
+           x = as.Date("2023-11-25"),
+           y = 2500, 
+           label = "Oilseed Rape", 
+           fontface = "bold") + 
+  annotate(geom = "text", 
+           x = as.Date("2024-05-15"),
+           y = 2500, 
+           label = "Spring Barley", 
+           fontface = "bold",
+           color = "turquoise3") + 
+  theme_linedraw() + 
+  theme(legend.position = "bottom")
 
 
-  ggsave(filename = "spray_plot.png", 
+  ggsave(filename = "fig_applications_by_time.png", 
          path = "plots/04_all_crops/", 
-         width = 5, 
-         height = 5)
+         width = 10, 
+         height = 4)
 
   
   
-  ### OPERATIONS ####
+  
+  
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+## ~ OPERATIONS ####
   
   
   # this is the legend title with correct notation
@@ -87,7 +110,7 @@ ggplot(data = app_dat,
   date_range <- which(op_dat$Date %in% as.Date(
     c("2022-03-01", "2022-10-01")) )
   
-  
+op_time_plot <-
   ggplot(data = op_dat,
          aes(x = Date, 
              y = accumulated_cost_ha, 
@@ -97,54 +120,74 @@ ggplot(data = app_dat,
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
-    theme(
-      legend.position = c(.95, .25),
-      legend.justification = c("right", "top"),
-      legend.box.just = "right",
-      legend.margin = margin(6, 6, 6, 6),
-      legend.title = element_text(face = "bold"),
-      aspect.ratio = 1/1.5, 
-      panel.background = element_rect(fill = "white", 
-                                      linetype = 1, 
-                                      color = "black")) +
-    scale_color_manual(values = c("turquoise3", "tomato2")) +
+    scale_color_manual(values = c("tomato2", "turquoise3")) +
     labs(
       x = "Date",
       y = y_title,
-      title = "Harper Adams Conservation Agriculture Experiment", 
-      subtitle = title_exp, 
-      caption = "All prices from invoices") +
+      subtitle = title_exp) +
+    ylim(0,1500) +
+  scale_x_date(limits = c(as.Date("2022-01-01"), as.Date("2024-10-01"))) +
     geom_vline(xintercept = as.numeric(as.Date("2022-10-03")),  # Example date for the vertical line
                linetype = "dashed",
                color = "black") +
     geom_vline(xintercept = as.numeric(as.Date("2023-08-20")),  # Example date for the vertical line
                linetype = "dashed",
                color = "black") +
-    annotate(geom = "text", x = as.Date("2022-03-05"),
-             y = 800, label = "Spring Beans", fontface = "bold") +
-    annotate(geom = "text", x = as.Date("2023-01-05"),
-             y = 800, label = "Winter Wheat", fontface = "bold") 
+    geom_vline(xintercept = as.numeric(as.Date("2024-03-15")),  # Example date for the vertical line
+               linetype = "dashed",
+               color = "turquoise3") +
+    annotate(geom = "text", 
+             x = as.Date("2022-04-05"),
+             y = 1400, 
+             label = "Spring Beans", 
+             fontface = "bold") +
+    annotate(geom = "text", 
+             x = as.Date("2023-02-05"),
+             y = 1400, 
+             label = "Winter Wheat", 
+             fontface = "bold") +
+    annotate(geom = "text", 
+             x = as.Date("2023-11-25"),
+             y = 1400, 
+             label = "Oilseed Rape", 
+             fontface = "bold") + 
+    annotate(geom = "text", 
+             x = as.Date("2024-06-15"),
+             y = 1400, 
+             label = "Spring Barley", 
+             fontface = "bold",
+             color = "turquoise3") + 
+  theme_linedraw() + 
+    theme(legend.position = "bottom")
   
+op_time_plot
   
   ggsave(filename = "operations_plot.png", 
          path = "plots/04_all_crops/", , 
-         width = 5, 
-         height = 5)
+         width = 10, 
+         height = 4)
   
   
   
-  ### TOTAL EXPENDITURE ####
+  
+  
+  
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+  ## ~ TOTAL EXPENDITURE ####
   
   
   # this is the legend title with correct notation
-  title_exp <- expression(Expenditure~('£'~ha^{-1})) 
+  title_exp <- expression(Total~Expenditure~('£'~ha^{-1})) 
   y_title <- expression('£'~ha^{-1})
   
   # date_range object
   date_range <- which(dat$Date %in% as.Date(
     c("2022-03-01", "2022-10-01")) )
   
+glimpse(dat)
   
+  
+expen_plot <-  
   ggplot(data = dat,
          aes(x = Date, 
              y = accumulated_cost_ha, 
@@ -154,44 +197,72 @@ ggplot(data = app_dat,
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
-    theme(
-      legend.position = c(.95, .25),
-      legend.justification = c("right", "top"),
-      legend.box.just = "right",
-      legend.margin = margin(6, 6, 6, 6),
-      legend.title = element_text(face = "bold"),
-      aspect.ratio = 1/1.5, 
-      panel.background = element_rect(fill = "white", 
-                                      linetype = 1, 
-                                      color = "black")) +
   scale_color_manual(values = c("turquoise3", "tomato2")) +
     labs(
       x = "Date",
       y = y_title,
-      title = "Harper Adams Conservation Agriculture Experiment", 
-      subtitle = title_exp, 
-      caption = "All prices from invoices") +
+      subtitle = title_exp) +
+    ylim(0,3500) +
+  scale_x_date(limits = c(as.Date("2022-01-01"), as.Date("2024-10-01"))) +
     geom_vline(xintercept = as.numeric(as.Date("2022-10-03")),  # Example date for the vertical line
                linetype = "dashed",
                color = "black") +
     geom_vline(xintercept = as.numeric(as.Date("2023-08-20")),  # Example date for the vertical line
                linetype = "dashed",
                color = "black") +
-    annotate(geom = "text", x = as.Date("2022-03-05"),
-             y = 7000, label = "Spring Beans", fontface = "bold") +
-    annotate(geom = "text", x = as.Date("2023-01-05"),
-             y = 7000, label = "Winter Wheat", fontface = "bold") 
+    geom_vline(xintercept = as.numeric(as.Date("2024-03-15")),  # Example date for the vertical line
+               linetype = "dashed",
+               color = "turquoise3") +
+    annotate(geom = "text", 
+             x = as.Date("2022-04-05"),
+             y = 3400, 
+             label = "Spring Beans", 
+             fontface = "bold") +
+    annotate(geom = "text", 
+             x = as.Date("2023-02-05"),
+             y = 3400, 
+             label = "Winter Wheat", 
+             fontface = "bold") +
+    annotate(geom = "text", 
+             x = as.Date("2023-11-25"),
+             y = 3400, 
+             label = "Oilseed Rape", 
+             fontface = "bold") + 
+    theme_classic() + 
+    theme(legend.position = "bottom") +
+    annotate(geom = "text", 
+             x = as.Date("2024-06-15"),
+             y = 3400, 
+             label = "Spring Barley", 
+             fontface = "bold",
+             color = "turquoise3") + 
+    theme_linedraw() + 
+    theme(legend.position = "bottom")
   
+expen_plot
   
-  ggsave(filename = "expenditure_plot.png", 
+ggsave(filename = "fig_total_expenditure.png", 
          path = "plots/04_all_crops/", 
-         width = 5, 
-         height = 5)
+         width = 10, 
+         height = 4)
   
   
   
   
-## BARPLOTS SUMMARY PLOTS ####
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# ~ Combined plot ####
+  
+ggarrange(app_time_plot, op_time_plot, expen_plot,
+          ncol = 1, nrow = 3, 
+          labels = c("A","B","C"), 
+          legend = "bottom", common.legend = TRUE)
+  
+ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, height = 8)
+  
+  
+  
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# BARPLOTS SUMMARY PLOTS ####
   
   
   # this is the legend title with correct notation

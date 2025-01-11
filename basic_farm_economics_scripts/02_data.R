@@ -41,7 +41,7 @@ summary_dat <- read_xlsx(path = "data/04_all/economic_summary.xlsx",
                          col_names = TRUE)
 
 
-# wheat yiled data 
+# wheat yield data 
 
 wheat_yield_dat <- read.csv(file = "data/02_wheat/2023.yield.wheat.csv")
 
@@ -132,14 +132,38 @@ op_dat <- op_dat %>%
 
 
 
-### 02.6 TOTAL EXPENDITURE ####
 
-dat$cost_per_ha <- dat$`gross_£`
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
+## ~ TOTAL EXPENDITURE ####
+
+dat$price_per_unit <- replace(x = dat$pack_price / dat$pack_size, 
+                                  list =  dat$pack_size == 0, 
+                                  values =  0)
+
+dat$units_per_ha <- dat$Area_ha * dat$Rate_ha
+
+
+
+dat$cost_per_ha <- if_else(condition = dat$Type == "Operation", 
+                           true = dat$`gross_£`, 
+                           false = NA)
+
+dat$cost_per_ha <- if_else(condition = dat$Type == "Application", 
+                           true = dat$Rate_ha * dat$price_per_unit, 
+                           false = dat$cost_per_ha)
+
 
 # Calculate the accumulated sum based on the 'group' column
 dat <- dat %>%
   group_by(Treatment) %>%
   mutate(accumulated_cost_ha = cumsum(cost_per_ha))
+
+
+
+
+
+
 
 
 

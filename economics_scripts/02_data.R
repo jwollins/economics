@@ -13,7 +13,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
 # PACKAGES ####
 
-source(file = "scripts/01_packages.R")
+source(file = "economics_scripts/01_packages.R")
 
 
 
@@ -22,6 +22,9 @@ source(file = "scripts/01_packages.R")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
 # LOAD RAW DATA ####
+
+
+setwd(dir = "~/OneDrive - Harper Adams University/Data/economics/")
 
 # expenditure data 
 
@@ -90,6 +93,9 @@ bean_dat <- subset(dat, dat$crop == "Spring beans")
 wheat_dat <- subset(dat, dat$crop == "Winter wheat")
 
 y3_dat <- subset(x = dat, subset = dat$year == 2024)
+
+
+
 
 app_dat <- subset(dat, dat$Type == "Application")
 

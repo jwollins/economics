@@ -5,18 +5,20 @@
 
 # 03 PLOTS ####
 
+setwd(dir = "~/Documents/GitHub/economics/")
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # PACKAGES ####
 
-source(file = "scripts/01_packages.R")
+source(file = "economics_scripts/01_packages.R")
 
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # DATA ####
 
-source(file = "scripts/02_data.R")
+source(file = "economics_scripts/02_data.R")
 
 
 
@@ -44,7 +46,7 @@ ggplot(data = app_dat,
            y = accumulated_cost_ha, 
            color = Treatment, 
            group = Treatment)) +
-  geom_step(size = 1, 
+  geom_step(linewidth = 1, 
             show.legend = TRUE) +
   geom_point(color = "black", 
              size = 1) +
@@ -88,12 +90,15 @@ ggplot(data = app_dat,
   theme_linedraw() + 
   theme(legend.position = "bottom")
 
+app_time_plot
+
 
   ggsave(filename = "fig_applications_by_time.png", 
          path = "plots/04_all_crops/", 
          width = 10, 
          height = 4)
 
+  
   
   
   
@@ -116,7 +121,7 @@ op_time_plot <-
              y = accumulated_cost_ha, 
              color = Treatment, 
              group = Treatment)) +
-    geom_step(size = 1, 
+    geom_step(linewidth = 1, 
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
@@ -193,7 +198,7 @@ expen_plot <-
              y = accumulated_cost_ha, 
              color = Treatment, 
              group = Treatment)) +
-    geom_step(size = 1, 
+    geom_step(linewidth = 1, 
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
@@ -261,6 +266,10 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
   
   
   
+
+
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # BARPLOTS SUMMARY PLOTS ####
   
@@ -284,8 +293,6 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
         subtitle = title_exp, 
         caption = "All prices from invoices") +
       theme_bw() +
-      scale_fill_manual(values=c("#999999", "#56B4E9", "#E69F00"), 
-                        name = "Crop") +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
                                         face = "bold.italic"))

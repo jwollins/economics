@@ -6,19 +6,21 @@
 # 03 PLOTS ####
 
 
+setwd(dir = "~/Documents/GitHub/economics/")
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # PACKAGES ####
 
-source(file = "scripts/01_packages.R")
+source(file = "economics_scripts/01_packages.R")
 
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # DATA ####
 
-source(file = "scripts/02_data.R")
+source(file = "economics_scripts/02_data.R")
 
-
+getwd()
 
 
 
@@ -48,7 +50,7 @@ ggplot(data = app_dat,
             show.legend = TRUE) +
   geom_point(color = "black", 
              size = 1) +
-  scale_color_manual(values = c("tomato2", "turquoise3")) +
+  scale_color_manual(values = c("turquoise3", "tomato2")) +
   labs(
     x = "Date",
     y = y_title,
@@ -93,7 +95,7 @@ ggplot(data = app_dat,
 app_time_plot
 
   ggsave(filename = "fig_applications_by_time.png", 
-         path = "plots/04_all_crops/", 
+         path = "plots/", 
          width = 10, 
          height = 4)
 
@@ -123,7 +125,7 @@ op_time_plot <-
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
-    scale_color_manual(values = c("tomato2", "turquoise3")) +
+    scale_color_manual(values = c("turquoise3", "tomato2")) +
     labs(
       x = "Date",
       y = y_title,
@@ -166,7 +168,7 @@ op_time_plot <-
 op_time_plot
   
   ggsave(filename = "operations_plot.png", 
-         path = "plots/04_all_crops/", , 
+         path = "plots/", , 
          width = 10, 
          height = 4)
   
@@ -200,7 +202,7 @@ expen_plot <-
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
-  scale_color_manual(values = c("turquoise3", "tomato2")) +
+  scale_color_manual(values = c("tomato2", "turquoise3")) +
     labs(
       x = "Date",
       y = y_title,
@@ -245,7 +247,7 @@ expen_plot <-
 expen_plot
   
 ggsave(filename = "fig_total_expenditure.png", 
-         path = "plots/04_all_crops/", 
+         path = "plots/", 
          width = 10, 
          height = 4)
   
@@ -260,7 +262,7 @@ ggarrange(app_time_plot, op_time_plot, expen_plot,
           labels = c("A","B","C"), 
           legend = "bottom", common.legend = TRUE)
   
-ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, height = 8)
+ggsave(filename = "plots/fig_expenditure_by_time.png", width = 10, height = 8)
   
   
   
@@ -275,7 +277,7 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
 
     ggplot(data = summary_dat, 
            aes(x = block, 
-               y = gross_margin, 
+               y = total_gm_ha, 
                fill = year)) + 
       geom_bar(stat = "identity", 
                color = "black") + 
@@ -287,9 +289,10 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
       theme_bw() +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
-                                        face = "bold.italic"), legend.position = "bottom")
+                                        face = "bold.italic"), 
+            legend.position = "bottom")
     
-    ggsave(filename = "gross_margin_by_block.png", path = "plots/04_all_crops/")
+    ggsave(filename = "gross_margin_by_block.png", path = "plots/")
     
 
    
@@ -310,7 +313,7 @@ gm_plot <-
                color = "black", 
                position = "dodge") + 
       scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                        name = "Crop") +
+                        name = "Treatment") +
       geom_errorbar(aes(ymin=mean-se,
                         ymax=mean+se),
                     width=.2,                    # Width of the error bars
@@ -324,12 +327,14 @@ gm_plot <-
       theme_bw() +
       theme(strip.text.x = element_text(size = 12, 
                                         # color = "black", 
-                                        face = "bold.italic"), legend.position = "bottom") 
+                                        face = "bold.italic"), 
+            legend.position = "bottom", 
+            axis.title.x = element_blank(), axis.text.x = element_blank()) 
     
     
     gm_plot
     
-    ggsave(filename = "fig_gm_by_treatment.png", path = "plots/04_all_crops/")
+    ggsave(filename = "fig_gm_by_treatment.png", path = "plots/")
     
     
     
@@ -343,7 +348,7 @@ gm_plot <-
     
 ggplot(data = summary_dat, 
            aes(x = block, 
-               y = grain_gross_margin, 
+               y = grain_gm, 
                fill = year)) + 
       geom_bar(stat = "identity", 
                color = "black") + 
@@ -359,7 +364,7 @@ ggplot(data = summary_dat,
                                         face = "bold.italic"), 
             legend.position = "bottom")
     
-    ggsave(filename = "fig_grain_gm_by_block.png", path = "plots/04_all_crops/")
+    ggsave(filename = "fig_grain_gm_by_block.png", path = "plots/")
     
     
     
@@ -381,7 +386,7 @@ y_title <- expression(Gross~Margin~'£'~ha^{-1})
                color = "black", 
                position = "dodge") + 
       labs(
-        x = "Crop",
+        x = "Treatment",
         y = y_title,
         subtitle = title_exp) +
       theme_bw() +
@@ -390,14 +395,16 @@ y_title <- expression(Gross~Margin~'£'~ha^{-1})
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
                                         face = "bold.italic"), 
-            legend.position = "bottom") +
+            legend.position = "bottom", 
+            axis.title.x = element_blank(), 
+            axis.text.x = element_blank()) +
       geom_errorbar(aes(ymin=mean-se, 
                         ymax=mean+se),
                     width=.2,                    # Width of the error bars
                     position=position_dodge(.9)) +
       facet_wrap(~ year, ncol = 4)
     
-ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/04_all_crops/")
+ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/")
     
     
     

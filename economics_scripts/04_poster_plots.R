@@ -8,39 +8,39 @@
 ## A - YIELD PLOT ####
 
 
-# this is the legend title with correct notation
-title_exp <- expression(Grain~Yield~(t~ha^{-1})) 
-y_title <- expression(Yiel~'£'~ha^{-1})
-
-yield_plot <- ggplot(data = yield_sum, 
-                     aes(x = treatment, 
-                         y = mean, 
-                         fill = treatment)) + 
-  geom_bar(stat = "identity", 
-           color = "black", 
-           position = "dodge") + 
-  labs(
-    x = "Crop",
-    y = title_exp, 
-    title = title_exp) +
-  theme_bw() +
-  scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                    name = "Treatment") +
-  theme(strip.text.x = element_text(size = 12, 
-                                    color = "black", 
-                                    face = "bold.italic"),
-        axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()) +
-  geom_errorbar(aes(ymin=mean-se, 
-                    ymax=mean+se),
-                width=.2,                    # Width of the error bars
-                position=position_dodge(.9)) +
-  facet_wrap(~ year, ncol = 2)
-
-yield_plot
-
-
+# # this is the legend title with correct notation
+# title_exp <- expression(Grain~Yield~(t~ha^{-1})) 
+# y_title <- expression(Yiel~'£'~ha^{-1})
+# 
+# yield_plot <- ggplot(data = yield_sum, 
+#                      aes(x = treatment, 
+#                          y = mean, 
+#                          fill = treatment)) + 
+#   geom_bar(stat = "identity", 
+#            color = "black", 
+#            position = "dodge") + 
+#   labs(
+#     x = "Crop",
+#     y = title_exp, 
+#     title = title_exp) +
+#   theme_bw() +
+#   scale_fill_manual(values=c("tomato2", "turquoise3"), 
+#                     name = "Treatment") +
+#   theme(strip.text.x = element_text(size = 12, 
+#                                     color = "black", 
+#                                     face = "bold.italic"),
+#         axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank()) +
+#   geom_errorbar(aes(ymin=mean-se, 
+#                     ymax=mean+se),
+#                 width=.2,                    # Width of the error bars
+#                 position=position_dodge(.9)) +
+#   facet_wrap(~ year, ncol = 2)
+# 
+# yield_plot
+# 
+# 
 
 
 
@@ -409,7 +409,7 @@ ggarrange(
 
 
 ggsave(filename = "fig_rev_ex_gm_comparison.png", 
-       path = "plots/04_all_crops/", 
+       path = "plots/", 
        width = 12, 
        height = 4)
 

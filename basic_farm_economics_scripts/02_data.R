@@ -3,15 +3,25 @@
 ### 2024-04-26
 ###
 
-## 02 DATA ####
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
+# DATA ####
 
 
 
-### 02.1 PACKAGES ####
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
+# PACKAGES ####
 
 source(file = "scripts/01_packages.R")
 
-### 02.2 READ DATA ####
+
+
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
+# LOAD RAW DATA ####
 
 # expenditure data 
 
@@ -46,12 +56,40 @@ summary_dat <- read_xlsx(path = "data/04_all/economic_summary.xlsx",
 wheat_yield_dat <- read.csv(file = "data/02_wheat/2023.yield.wheat.csv")
 
 
-### 02.3 FILTER DATA ####
+
+
+
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
+# DATA PROCESS ####
+
+
+# add year 
+
+unique(dat$crop)
+
+dat$year <- NA
+
+dat$year <- if_else(condition = dat$crop == "Spring beans", 
+                    true = 2022, false = dat$year)
+
+dat$year <- if_else(condition = dat$crop == "Winter wheat", 
+                    true = 2023, false = dat$year)
+
+dat$year <- if_else(condition = dat$crop == "Oilseed Rape" | dat$crop == "Spring Barley", 
+                    true = 2024, false = dat$year)
+
+
+## ~ FILTER DATA ####
 
 # Filter the data based on a criteria of a certain column
 bean_dat <- subset(dat, dat$crop == "Spring beans")
 
 wheat_dat <- subset(dat, dat$crop == "Winter wheat")
+
+y3_dat <- subset(x = dat, subset = dat$year == 2024)
 
 app_dat <- subset(dat, dat$Type == "Application")
 
@@ -60,7 +98,10 @@ op_dat <- subset(dat, dat$Type == "Operation")
 
 
 
-### 02.3 set factors ####
+
+
+
+## ~ set factors ####
 
 
 summary_dat$treatment <- factor(summary_dat$treatment, 
@@ -71,6 +112,8 @@ summary_dat$block <- factor(summary_dat$block,
 
 summary_dat$plot <- factor(summary_dat$plot, 
                            levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+
+summary_dat$year <- factor(x = summary_dat$year, levels = c(2022,2023,2024))
 
 ex_proportions$treatment <- factor(ex_proportions$treatment, 
                                 levels = c("Conventional", "Conservation"))
@@ -101,8 +144,8 @@ ex_proportions$category <- factor(ex_proportions$category,
 
 
 
-
-### 02.4 APPLICATIONS ####
+# ~~~~~~~~~~ ####
+# ~ APPLICATIONS ####
 
 
 app_dat$price_per_unit <- replace(x = app_dat$pack_price / app_dat$pack_size, 
@@ -121,7 +164,14 @@ app_dat <- app_dat %>%
 
 
 
-### 02.5 OPERATIONS ####
+
+
+
+
+
+
+# ~~~~~~~~~~ ####
+# ~ OPERATIONS ####
 
 op_dat$cost_per_ha <- op_dat$`gross_£`
 
@@ -134,8 +184,13 @@ op_dat <- op_dat %>%
 
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
-## ~ TOTAL EXPENDITURE ####
+
+
+
+
+
+# ~~~~~~~~~~ ####
+# ~ TOTAL EXPENDITURE ####
 
 dat$price_per_unit <- replace(x = dat$pack_price / dat$pack_size, 
                                   list =  dat$pack_size == 0, 
@@ -167,11 +222,14 @@ dat <- dat %>%
 
 
 
-### 02.7 SUMMARY STATS ####
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# SUMMARY STATS ####
 
 # Calculates mean, sd, se and IC - block
 gm_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n=n(),
     mean=mean(gross_margin),
@@ -179,10 +237,13 @@ gm_sum <- summary_dat %>%
   ) %>%
   mutate( se=sd/sqrt(n))  %>%
   mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+
+gm_sum$year <- factor(x = gm_sum$year, levels = c(2022,2023,2024))
+
 
 
 gm_sum_block <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n=n(),
     mean=mean(gross_margin),
@@ -192,11 +253,13 @@ gm_sum_block <- summary_dat %>%
   mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
 
 
-#### NO STRAW ####
+
+
+# ~~ NO STRAW ####
 
 # Calculates mean, sd, se and IC - block
 no_straw_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n=n(),
     mean=mean(grain_gross_margin),
@@ -207,11 +270,11 @@ no_straw_sum <- summary_dat %>%
 
 
 
-#### Revenue summary ####
+# ~~ Revenue summary ####
 
 # Calculates mean, sd, se and IC - block
 rev_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n=n(),
     mean=mean(total_revenue),
@@ -222,11 +285,11 @@ rev_sum <- summary_dat %>%
 
 
 
-#### Net profit margin summary ####
+# ~~ Net profit margin summary ####
 
 # Calculates mean, sd, se and IC - block
 npm_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n=n(),
     mean=mean(net_profit_margin),
@@ -237,7 +300,7 @@ npm_sum <- summary_dat %>%
 
 
 
-### YIELD ####
+# ~~ YIELD ####
 
 # Calculates mean, sd, se and IC - block
 yield_sum <- summary_dat %>%
@@ -250,14 +313,17 @@ yield_sum <- summary_dat %>%
   mutate( se=sd/sqrt(n))  %>%
   mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
 
-yield_sum$crop <- as.factor(yield_sum$crop)
+unique(yield_sum$crop)
+
+yield_sum$crop <- factor(yield_sum$crop, levels = c("Spring Beans", "Winter Wheat", "Oilseed Rape", "Spring Barley"))
 
 
-### EXPENDITURE ####
+
+# ~~ EXPENDITURE ####
 
 # Calculates mean, sd, se and IC - block
 expenditure_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n=n(),
     mean=mean(expenditure),
@@ -266,16 +332,16 @@ expenditure_sum <- summary_dat %>%
   mutate( se=sd/sqrt(n))  %>%
   mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
 
-expenditure_sum$crop <- as.factor(expenditure_sum$crop)
 
 
 
 
-### OP EXPENDITURE ####
+
+# ~~ OP EXPENDITURE ####
 
 # Calculates mean, sd, se and IC - block
 op_expenditure_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n = n(),
     mean = mean(operational_expenditure),
@@ -284,14 +350,13 @@ op_expenditure_sum <- summary_dat %>%
   mutate( se = sd/sqrt(n))  %>%
   mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
 
-op_expenditure_sum$crop <- as.factor(op_expenditure_sum$crop)
 
 
-### CROP EXPENDITURE ####
+# ~~ CROP EXPENDITURE ####
 
 # Calculates mean, sd, se and IC - block
 crop_expenditure_sum <- summary_dat %>%
-  group_by(treatment, crop) %>%
+  group_by(treatment, year) %>%
   summarise( 
     n = n(),
     mean = mean(crop_expenditure),
@@ -300,8 +365,31 @@ crop_expenditure_sum <- summary_dat %>%
   mutate( se = sd/sqrt(n))  %>%
   mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
 
-crop_expenditure_sum$crop <- as.factor(crop_expenditure_sum$crop)
 
+
+
+
+
+
+
+# ~~ application by year and crop ####
+
+names(app_dat)
+
+
+op_app_sum <- dat %>%
+  group_by(Type, Treatment, year) %>%
+  summarise( 
+    n = n(),
+    expenditure = sum(cost_per_ha)
+  )
+
+ex_sum <- dat %>%
+  group_by(year, Treatment) %>%
+  summarise( 
+    n = n(),
+    expenditure = sum(cost_per_ha)
+  )
 
 
 

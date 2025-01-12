@@ -19,7 +19,6 @@ yield_plot <- ggplot(data = yield_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ncol = 2) +
   labs(
     x = "Crop",
     y = title_exp, 
@@ -37,27 +36,7 @@ yield_plot <- ggplot(data = yield_sum,
                     ymax=mean+se),
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9)) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01, 
-    annotations = "NS.", 
-    fontface = 'italic', 
-    y_position = c(11) # Adjust y-position if necessary
-  ) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01,
-    annotations = "p = 0.044",
-    fontface = 'italic', 
-    y_position = c(11) # Adjust y-position if necessary
-  ) +
-  facet_wrap(~ crop, ncol = 2)
+  facet_wrap(~ year, ncol = 2)
 
 yield_plot
 
@@ -85,14 +64,13 @@ rev_plot <- ggplot(data = rev_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ) +
   labs(
     x = "Crop",
     y = y_title, 
     title = title_exp) +
   theme_bw() +
   scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                    name = "CTreatment") +
+                    name = "Treatment") +
   theme(strip.text.x = element_text(size = 12, 
                                     color = "black", 
                                     face = "bold.italic"),
@@ -103,27 +81,7 @@ rev_plot <- ggplot(data = rev_sum,
                     ymax=mean+se),
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9)) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01, 
-    annotations = "NS.", 
-    fontface = 'italic', 
-    y_position = c(2400) # Adjust y-position if necessary
-  ) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01,
-    annotations = "p = 0.005", 
-    fontface = 'italic', 
-    y_position = c(2400) # Adjust y-position if necessary
-  ) +
-  facet_wrap(~ crop, ncol = 2)
+  facet_wrap(~ year, ncol = 4)
 
 
 rev_plot
@@ -153,7 +111,6 @@ expenditure_plot <- ggplot(data = expenditure_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ncol = 2) +
   labs(
     x = "Crop",
     y = title_exp, 
@@ -166,7 +123,8 @@ expenditure_plot <- ggplot(data = expenditure_sum,
                                     face = "bold.italic"),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank()) +
+  facet_wrap(~ year, ncol = 4) 
 
 expenditure_plot
 
@@ -195,7 +153,6 @@ gm_plot <- ggplot(data = gm_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ) +
   labs(
     x = "Crop",
     y = y_title, 
@@ -213,30 +170,14 @@ gm_plot <- ggplot(data = gm_sum,
                     ymax=mean+se),
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9)) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01, 
-    annotations = "NS.", 
-    fontface = 'italic', 
-    y_position = c(850) # Adjust y-position if necessary
-  ) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01,
-    annotations = "NS.",
-    fontface = 'italic', 
-    y_position = c(850) # Adjust y-position if necessary
-  ) +
-  facet_wrap(~ crop, ncol = 2)
+  facet_wrap(~ year, ncol = 3)
+
+gm_plot
   
 
-  
+
+
+
 
 
 ## E - Net profit margin proportion plot ####
@@ -253,7 +194,6 @@ npm_plot <- ggplot(data = npm_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ) +
   labs(
     x = "Crop",
     y = y_title, 
@@ -271,27 +211,7 @@ npm_plot <- ggplot(data = npm_sum,
                     ymax=mean+se),
                 width=.2,                    # Width of the error bars
                 position=position_dodge(.9)) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01, 
-    annotations = "NS.", 
-    fontface = 'italic', 
-    y_position = c(50) # Adjust y-position if necessary
-  ) +
-  geom_signif(
-    data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-    comparisons = list(c("Conventional", "Conservation")),
-    map_signif_level = TRUE,
-    textsize = 4,
-    tip_length = 0.01,
-    annotations = "NS.",
-    fontface = 'italic', 
-    y_position = c(50) # Adjust y-position if necessary
-  ) +
-  facet_wrap(~ crop, ncol = 2)
+  facet_wrap(~ year, ncol = 3)
 
 
 
@@ -325,7 +245,6 @@ npm_plot
     geom_bar(stat = "identity", 
              color = "black", 
              position = "dodge") + 
-    facet_wrap(~ crop, ) +
     labs(
       x = "Crop",
       y = y_title, 
@@ -343,29 +262,9 @@ npm_plot
                       ymax=mean+se),
                   width=.2,                    # Width of the error bars
                   position=position_dodge(.9)) +
-    geom_signif(
-      data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-      comparisons = list(c("Conventional", "Conservation")),
-      map_signif_level = TRUE,
-      textsize = 4,
-      tip_length = 0.01, 
-      annotations = "NS.", 
-      fontface = 'italic', 
-      y_position = c(850) # Adjust y-position if necessary
-    ) +
-    geom_signif(
-      data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-      comparisons = list(c("Conventional", "Conservation")),
-      map_signif_level = TRUE,
-      textsize = 4,
-      tip_length = 0.01,
-      annotations = "NS.",
-      fontface = 'italic', 
-      y_position = c(850) # Adjust y-position if necessary
-    ) +
-    facet_wrap(~ crop, ncol = 2)
+    facet_wrap(~ year, ncol = 3)
   
-  
+  no_straw_plot 
   
   
   
@@ -410,7 +309,6 @@ op_expenditure_plot <- ggplot(data = op_expenditure_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ncol = 2) +
   labs(
     x = "Crop",
     y = title_exp, 
@@ -423,7 +321,8 @@ op_expenditure_plot <- ggplot(data = op_expenditure_sum,
                                     face = "bold.italic"),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank()) +
+  facet_wrap(~ year, ncol = 3)
 
 op_expenditure_plot
 
@@ -444,7 +343,6 @@ crop_expenditure_plot <- ggplot(data = crop_expenditure_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
-  facet_wrap(~ crop, ncol = 2) +
   labs(
     x = "Crop",
     y = title_exp, 
@@ -457,7 +355,8 @@ crop_expenditure_plot <- ggplot(data = crop_expenditure_sum,
                                     face = "bold.italic"),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank()) +
+  facet_wrap(~ year, ncol = 3) 
 
 crop_expenditure_plot
 
@@ -470,35 +369,49 @@ crop_expenditure_plot
 ## GRID PLOT ####
 
 # 1
-figure <- ggarrange(yield_plot, 
+figure <- ggarrange(
+  #yield_plot, 
           rev_plot,
           expenditure_plot, 
           gm_plot,
-          npm_plot, 
-          ncol = 5, 
+          # npm_plot, 
+          ncol = 3, 
           nrow = 1, 
           align = "v",
           vjust = 1, 
-          labels = c("A", "B", "C", "D", "E"), 
+          labels = c("A", "B", "C"), 
           legend = "bottom", 
           common.legend = TRUE,
           widths = 1,
-          heights = 1) +
-  theme(legend.text=element_text(size = 20))
+          heights = 1)
+
+figure
 
 
-  annotate_figure(figure,
-                  bottom = text_grob("Costs and returns are calculated for each treatment area separately.", 
-                                     color = "black",
-                                     hjust = 1, 
-                                     x = 1, 
-                                     face = "italic", 
-                                     size = 10))
+  # annotate_figure(figure,
+  #                 bottom = text_grob("Costs and returns are calculated for each treatment area separately.", 
+  #                                    color = "black",
+  #                                    hjust = 1, 
+  #                                    x = 1, 
+  #                                    face = "italic", 
+  #                                    size = 10))
 
-ggsave(filename = "fig_plot.png", 
+
+ggarrange(
+  rev_plot,
+  expenditure_plot, 
+  gm_plot,
+  ncol = 3, 
+  nrow = 1, 
+  labels = c("A", "B", "C"), 
+  legend = "bottom", 
+  common.legend = TRUE)
+
+
+ggsave(filename = "fig_rev_ex_gm_comparison.png", 
        path = "plots/04_all_crops/", 
-       width = 20, 
-       height = 5, )
+       width = 12, 
+       height = 4)
 
 
 

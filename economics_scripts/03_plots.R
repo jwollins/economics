@@ -5,20 +5,18 @@
 
 # 03 PLOTS ####
 
-setwd(dir = "~/Documents/GitHub/economics/")
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # PACKAGES ####
 
-source(file = "economics_scripts/01_packages.R")
+source(file = "scripts/01_packages.R")
 
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # DATA ####
 
-source(file = "economics_scripts/02_data.R")
+source(file = "scripts/02_data.R")
 
 
 
@@ -46,7 +44,7 @@ ggplot(data = app_dat,
            y = accumulated_cost_ha, 
            color = Treatment, 
            group = Treatment)) +
-  geom_step(linewidth = 1, 
+  geom_step(size = 1, 
             show.legend = TRUE) +
   geom_point(color = "black", 
              size = 1) +
@@ -90,15 +88,15 @@ ggplot(data = app_dat,
   theme_linedraw() + 
   theme(legend.position = "bottom")
 
-app_time_plot
 
+
+app_time_plot
 
   ggsave(filename = "fig_applications_by_time.png", 
          path = "plots/04_all_crops/", 
          width = 10, 
          height = 4)
 
-  
   
   
   
@@ -121,7 +119,7 @@ op_time_plot <-
              y = accumulated_cost_ha, 
              color = Treatment, 
              group = Treatment)) +
-    geom_step(linewidth = 1, 
+    geom_step(size = 1, 
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
@@ -198,7 +196,7 @@ expen_plot <-
              y = accumulated_cost_ha, 
              color = Treatment, 
              group = Treatment)) +
-    geom_step(linewidth = 1, 
+    geom_step(size = 1, 
               show.legend = TRUE) +
     geom_point(color = "black", 
                size = 1) +
@@ -266,46 +264,44 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
   
   
   
-
-
-
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # BARPLOTS SUMMARY PLOTS ####
   
   
   # this is the legend title with correct notation
-  title_exp <- expression(Grain~"&"~Straw~Gross~Margin~('£'~ha^{-1})) 
+  title_exp <- expression(Gross~Margin~('£'~ha^{-1})) 
   y_title <- expression(Gross~Margin~'£'~ha^{-1})
   
 
     ggplot(data = summary_dat, 
            aes(x = block, 
                y = gross_margin, 
-               fill = crop)) + 
+               fill = year)) + 
       geom_bar(stat = "identity", 
                color = "black") + 
       facet_wrap(~ treatment, ) +
       labs(
         x = "Block",
         y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = "All prices from invoices") +
+        subtitle = title_exp) +
       theme_bw() +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
-                                        face = "bold.italic"))
+                                        face = "bold.italic"), legend.position = "bottom")
     
-    ggsave(filename = "profit_experom_plot.png", path = "plots/04_all_crops/")
+    ggsave(filename = "gross_margin_by_block.png", path = "plots/04_all_crops/")
     
 
    
+
     
-    ### profit barplot ####
+    
+    
+# ~ gross margin barplot ####
     
     #grain and straw
-    
+
+gm_plot <- 
     ggplot(data = gm_sum, 
            aes(x = treatment, 
                y = mean, 
@@ -313,83 +309,69 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
       geom_bar(stat = "identity", 
                color = "black", 
                position = "dodge") + 
-      facet_wrap(~ crop, ) +
-      labs(
-        x = "Crop",
-        y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = "Bean price = £300 / t, Wheat Price = £190 / t, Wheat straw price = £50 / t") +
-      theme_bw() +
       scale_fill_manual(values=c("tomato2", "turquoise3"), 
                         name = "Crop") +
-      theme(strip.text.x = element_text(size = 12, 
-                                        color = "black", 
-                                        face = "bold.italic")) +
-      geom_errorbar(aes(ymin=mean-se, 
+      geom_errorbar(aes(ymin=mean-se,
                         ymax=mean+se),
                     width=.2,                    # Width of the error bars
                     position=position_dodge(.9)) +
-      geom_signif(
-        data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-        comparisons = list(c("Conventional", "Conservation")),
-        map_signif_level = TRUE,
-        textsize = 4,
-        tip_length = 0.01, 
-        annotations = "NS.", 
-        fontface = 'italic', 
-        y_position = c(850) # Adjust y-position if necessary
-      ) +
-      geom_signif(
-        data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-        comparisons = list(c("Conventional", "Conservation")),
-        map_signif_level = TRUE,
-        textsize = 4,
-        tip_length = 0.01,
-        annotations = "NS.",
-        fontface = 'italic', 
-        y_position = c(850) # Adjust y-position if necessary
-      ) +
-      facet_wrap(~ crop, ncol = 2)
+      labs(
+        x = "Year",
+        y = y_title,
+        subtitle = expression(Gross~Margin~('£'~ha^{-1})), 
+        caption = "Bean price = £300 / t, Wheat Price = £190 / t, Wheat straw price = £50 / t") +
+      facet_wrap(~ year, ncol = 4) +
+      theme_bw() +
+      theme(strip.text.x = element_text(size = 12, 
+                                        # color = "black", 
+                                        face = "bold.italic"), legend.position = "bottom") 
     
-    ggsave(filename = "profit_treatment_plot.png", path = "plots/04_all_crops/")
+    
+    gm_plot
+    
+    ggsave(filename = "fig_gm_by_treatment.png", path = "plots/04_all_crops/")
     
     
     
-    ### block grain gross margin ####
     
     
-    ggplot(data = summary_dat, 
+# ~ block grain gross margin ####
+
+    # this is the legend title with correct notation
+    title_exp <- expression(Grain~Gross~Margin~('£'~ha^{-1})) 
+    y_title <- expression(Gross~Margin~'£'~ha^{-1})
+    
+ggplot(data = summary_dat, 
            aes(x = block, 
                y = grain_gross_margin, 
-               fill = crop)) + 
+               fill = year)) + 
       geom_bar(stat = "identity", 
                color = "black") + 
       facet_wrap(~ treatment, ) +
       labs(
         x = "Block",
         y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
         subtitle = title_exp, 
         caption = "All prices from invoices") +
       theme_bw() +
-      scale_fill_manual(values=c("#999999", "#56B4E9", "#E69F00"), 
-                        name = "Crop") +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
-                                        face = "bold.italic"))
+                                        face = "bold.italic"), 
+            legend.position = "bottom")
     
-    ggsave(filename = "no_straw_experom_plot.png", path = "plots/04_all_crops/")
-    
-    
-    
-    
-    ### treatment grain profit ####
+    ggsave(filename = "fig_grain_gm_by_block.png", path = "plots/04_all_crops/")
     
     
-    # this is the legend title with correct notation
-    title_exp <- expression(Grain~Gross~Margin~('£'~ha^{-1})) 
-    y_title <- expression(Gross~Margin~'£'~ha^{-1})
+    
+  
+    
+    
+# ~ treatment grain profit ####
+    
+    
+# this is the legend title with correct notation
+title_exp <- expression(Grain~Gross~Margin~('£'~ha^{-1})) 
+y_title <- expression(Gross~Margin~'£'~ha^{-1})
     
     ggplot(data = no_straw_sum, 
            aes(x = treatment, 
@@ -401,42 +383,21 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
       labs(
         x = "Crop",
         y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = "Bean price = £300 / t, Wheat Price = £190 / t, Wheat straw price = £50 / t") +
+        subtitle = title_exp) +
       theme_bw() +
       scale_fill_manual(values=c("tomato2", "turquoise3"), 
                         name = "Crop") +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
-                                        face = "bold.italic")) +
+                                        face = "bold.italic"), 
+            legend.position = "bottom") +
       geom_errorbar(aes(ymin=mean-se, 
                         ymax=mean+se),
                     width=.2,                    # Width of the error bars
                     position=position_dodge(.9)) +
-      geom_signif(
-        data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-        comparisons = list(c("Conventional", "Conservation")),
-        map_signif_level = TRUE,
-        textsize = 4,
-        tip_length = 0.01, 
-        annotations = "NS.", 
-        fontface = 'italic', 
-        y_position = c(850) # Adjust y-position if necessary
-      ) +
-      geom_signif(
-        data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-        comparisons = list(c("Conventional", "Conservation")),
-        map_signif_level = TRUE,
-        textsize = 4,
-        tip_length = 0.01,
-        annotations = "NS.",
-        fontface = 'italic', 
-        y_position = c(850) # Adjust y-position if necessary
-      ) +
-      facet_wrap(~ crop, ncol = 2)
+      facet_wrap(~ year, ncol = 4)
     
-    ggsave(filename = "no_straw_profit.png", path = "plots/04_all_crops/")
+ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/04_all_crops/")
     
     
     
@@ -444,66 +405,66 @@ ggsave(filename = "plots/04_all_crops/fig_expenditure_by_time.png", width = 10, 
     
     ### YIELD ####
     
-    # this is the legend title with correct notation
-    title_exp <- expression(Grain~Yield~(t~ha^{-1})) 
-    y_title <- expression(Yield~'£'~ha^{-1})
-    
-    ggplot(data = yield_sum, 
-           aes(x = treatment, 
-               y = mean, 
-               fill = treatment)) + 
-      geom_bar(stat = "identity", 
-               color = "black", 
-               position = "dodge") + 
-      labs(
-        x = "Crop",
-        y = title_exp,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = element_blank()) +
-      theme_bw() +
-      scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                        name = "Crop") +
-      theme(strip.text.x = element_text(size = 12, 
-                                        color = "black", 
-                                        face = "bold.italic")) +
-      geom_errorbar(aes(ymin=mean-se, 
-                        ymax=mean+se),
-                    width=.2,                    # Width of the error bars
-                    position=position_dodge(.9)) +
-      geom_signif(
-        data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
-        comparisons = list(c("Conventional", "Conservation")),
-        map_signif_level = TRUE,
-        textsize = 4,
-        tip_length = 0.01, 
-        annotations = "NS.", 
-        fontface = 'italic', 
-        y_position = c(11) # Adjust y-position if necessary
-      ) +
-      geom_signif(
-        data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
-        comparisons = list(c("Conventional", "Conservation")),
-        map_signif_level = TRUE,
-        textsize = 4,
-        tip_length = 0.01,
-        annotations = "p = 0.04",
-        fontface = 'italic', 
-        y_position = c(11) # Adjust y-position if necessary
-      ) +
-      theme(strip.text.x = element_text(size = 12, 
-                                        color = "black", 
-                                        face = "bold.italic"), 
-            legend.position="bottom", 
-            legend.title = element_blank(), 
-            legend.text = element_text(size = 7)) +
-      facet_wrap(~ crop, ncol = 2)
-    
-    ggsave(filename = "yield_plot.png", 
-           path = "plots/04_all_crops/", 
-           width = 5, 
-           height = 5)
-    
+    # # this is the legend title with correct notation
+    # title_exp <- expression(Grain~Yield~(t~ha^{-1})) 
+    # y_title <- expression(Yield~'£'~ha^{-1})
+    # 
+    # ggplot(data = yield_sum, 
+    #        aes(x = treatment, 
+    #            y = mean, 
+    #            fill = treatment)) + 
+    #   geom_bar(stat = "identity", 
+    #            color = "black", 
+    #            position = "dodge") + 
+    #   labs(
+    #     x = "Crop",
+    #     y = title_exp,
+    #     title = "Harper Adams Conservation Agriculture Experiment", 
+    #     subtitle = title_exp, 
+    #     caption = element_blank()) +
+    #   theme_bw() +
+    #   scale_fill_manual(values=c("tomato2", "turquoise3"), 
+    #                     name = "Crop") +
+    #   theme(strip.text.x = element_text(size = 12, 
+    #                                     color = "black", 
+    #                                     face = "bold.italic")) +
+    #   geom_errorbar(aes(ymin=mean-se, 
+    #                     ymax=mean+se),
+    #                 width=.2,                    # Width of the error bars
+    #                 position=position_dodge(.9)) +
+    #   geom_signif(
+    #     data = subset(yield_sum, crop == "Spring Beans"), # Subset data for Crop1
+    #     comparisons = list(c("Conventional", "Conservation")),
+    #     map_signif_level = TRUE,
+    #     textsize = 4,
+    #     tip_length = 0.01, 
+    #     annotations = "NS.", 
+    #     fontface = 'italic', 
+    #     y_position = c(11) # Adjust y-position if necessary
+    #   ) +
+    #   geom_signif(
+    #     data = subset(yield_sum, crop == "Winter Wheat"), # Subset data for Crop2
+    #     comparisons = list(c("Conventional", "Conservation")),
+    #     map_signif_level = TRUE,
+    #     textsize = 4,
+    #     tip_length = 0.01,
+    #     annotations = "p = 0.04",
+    #     fontface = 'italic', 
+    #     y_position = c(11) # Adjust y-position if necessary
+    #   ) +
+    #   theme(strip.text.x = element_text(size = 12, 
+    #                                     color = "black", 
+    #                                     face = "bold.italic"), 
+    #         legend.position="bottom", 
+    #         legend.title = element_blank(), 
+    #         legend.text = element_text(size = 7)) +
+    #   facet_wrap(~ crop, ncol = 4)
+    # 
+    # ggsave(filename = "yield_plot.png", 
+    #        path = "plots/04_all_crops/", 
+    #        width = 5, 
+    #        height = 5)
+    # 
     
     
     

@@ -520,6 +520,11 @@ ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/")
     y_title <- expression(Proportion~('%'))
     
     
+unique(app_dat$crop)    
+app_dat$crop <- factor(x = app_dat$crop, 
+                       levels = c("Spring beans", "Winter wheat", "Oilseed Rape", "Spring Barley"))
+
+    
     ggplot(data = app_dat, 
            aes(x = Treatment, 
                y = cost_per_ha, 
@@ -539,7 +544,7 @@ ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/")
             legend.position="bottom", 
             legend.title = element_blank(), 
             legend.text = element_text(size = 10)) +
-      facet_wrap(~ crop )
+      facet_wrap(~ year, ncol = 4)
     
     ggsave(filename = "crop_input_proportion_plot.png", 
            path = "plots/04_all_crops/", 
@@ -554,6 +559,10 @@ ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/")
     title_exp <- expression(Proportion~('%')~of~Operational~Expenditure~('£'~ha^{-1}))
     y_title <- expression(Proportion~('%'))
     
+    
+    unique(app_dat$crop)    
+    app_dat$crop <- factor(x = app_dat$crop, 
+                           levels = c("Spring beans", "Winter wheat", "Oilseed Rape", "Spring Barley"))
     
     ggplot(data = op_dat, 
            aes(x = Treatment, 

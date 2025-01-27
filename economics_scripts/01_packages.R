@@ -18,6 +18,7 @@ suppressPackageStartupMessages({
   if (!require(ggstats)) install.packages("ggstats")
   if (!require(nlme)) install.packages("nlme")
   if (!require(tidyr)) install.packages("tidyr")
+  if (!require(kableExtra)) install.packages("kableExtra")
   
   library(dplyr) # for "glimpse" and data manipulation
   library(ggplot2) # general plotting
@@ -31,6 +32,7 @@ suppressPackageStartupMessages({
   library(ggstats) # calculate proportions and add them to barplots
   library(nlme)
   library(tidyr) # pivot join df's 
+  library(kableExtra)
 })
 
 

@@ -41,9 +41,9 @@ dat <- dat[order(dat$Date), ]
 
 # expenditure proportions 
 
-ex_proportions <- read_xlsx(path = "data/04_all/expenditure_proportions.xlsx", 
-                            sheet = 1, 
-                            col_names = TRUE)
+# ex_proportions <- read_xlsx(path = "data/04_all/expenditure_proportions.xlsx", 
+#                             sheet = 1, 
+#                             col_names = TRUE)
 
 
 
@@ -367,7 +367,16 @@ summary_dat <- na.omit(summary_dat)
 
 
 
+# Remove a column (e.g., "column_to_remove")
+summary_dat <- summary_dat %>%
+  select(- "crop.y")
 
+
+summary_dat[,7:ncol(summary_dat)] <- round(summary_dat[,7:ncol(summary_dat)], digits = 2)
+
+write.csv(x = summary_dat, 
+          file = "data/processed_data/summary_economic_data.csv", 
+          row.names = FALSE)
 
 
 
@@ -385,7 +394,7 @@ summary_dat <- na.omit(summary_dat)
 # Calculates mean, sd, se and IC - block
 gm_sum <- 
   summary_dat %>%
-  group_by(treatment, year) %>%
+  group_by(year, treatment) %>%
   summarise( 
     n = n(),
     mean = mean(total_gm_ha),
@@ -395,6 +404,26 @@ gm_sum <-
   mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
 
 
+gm_sum[,3:ncol(gm_sum)] <- round(gm_sum[,3:ncol(gm_sum)], digits = 2)
+
+
+
+
+# Create a LaTeX table
+latex_table <- gm_sum %>%
+  kbl(format = "latex", 
+      booktabs = TRUE, 
+      caption = "My Table", 
+      label = "MyLabel", 
+      digits = 2) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"), # Avoid 'tabu'
+    full_width = FALSE,                 # Set to FALSE for `tabular`
+    font_size = 15                     # Adjust font size for readability
+  ) %>%
+  row_spec(0, bold = TRUE)
+
+print(latex_table)
 
 
 # gm_sum_block <- summary_dat %>%
@@ -504,6 +533,9 @@ op_expenditure_sum <- summary_dat %>%
   ) %>%
   mutate( se = sd/sqrt(n))  %>%
   mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+
+print(op_expenditure_sum)
+
 
 
 

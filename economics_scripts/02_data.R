@@ -555,6 +555,21 @@ crop_expenditure_sum <- summary_dat %>%
 
 
 
+# ~~ GRAIN EXPENDITURE ####
+
+names(summary_dat)
+
+# Calculates mean, sd, se and IC - block
+grain_expenditure_sum <- summary_dat %>%
+  group_by(treatment, year) %>%
+  summarise( 
+    n = n(),
+    mean = mean(grain_expenditure_total_ha),
+    sd = sd(grain_expenditure_total_ha)
+  ) %>%
+  mutate( se = sd/sqrt(n))  %>%
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+
 
 
 

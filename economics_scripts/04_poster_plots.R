@@ -362,6 +362,39 @@ crop_expenditure_plot
 
 
 
+### grain EXPENDITURE PLOT ####
+
+
+# this is the legend title with correct notation
+title_exp <- expression(Grain~Expenditure~("£"~ha^{-1})) 
+y_title <- expression(Expenditure~("£"~ha^{-1}))
+
+grain_expenditure_plot <- ggplot(data = grain_expenditure_sum, 
+                                aes(x = treatment, 
+                                    y = mean, 
+                                    fill = treatment)) + 
+  geom_bar(stat = "identity", 
+           color = "black", 
+           position = "dodge") + 
+  labs(
+    x = "Crop",
+    y = title_exp, 
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"), 
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  facet_wrap(~ year, ncol = 3) 
+
+grain_expenditure_plot
+
+
+
 
 
 
@@ -416,7 +449,20 @@ ggsave(filename = "fig_rev_ex_gm_comparison.png",
 
 
 
+ggarrange(
+  crop_expenditure_plot,
+  op_expenditure_plot, 
+  grain_expenditure_plot,
+  ncol = 3, 
+  nrow = 1, 
+  labels = c("A", "B", "C"), 
+  legend = "bottom", 
+  common.legend = TRUE)
 
+ggsave(filename = "fig_expenditure_breakdown.png", 
+       path = "plots/", 
+       width = 12, 
+       height = 4)
 
 
 ## PROPORTIONS ####

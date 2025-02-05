@@ -478,117 +478,121 @@ ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/")
     
     
     
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
+# PROPORTIONS ####
+
+
+## ~ DATA ####
+
+prop_dat <- read.csv(file = "data/processed_data/expen_and_revenue_proportions.csv")
+
+names(prop_dat)
+
+app_prop_dat <- filter(prop_dat, Type == "Application")
+
+op_prop_dat <- filter(prop_dat, Type == "Operation")
+
+
+
+total_prop <- read.csv(file = "data/processed_data/total_proportion.csv")
+
+
+
+## ~ applications ####
     
-    
-    ### proportions ####
-    
-    # this is the legend title with correct notation
-    title_exp <- expression(Proportion~of~Revenue~('%'))
-    y_title <- expression(Proportion~('%'))
-    
-    
-    ggplot(data = ex_proportions, 
-           aes(x = treatment, 
+a <-    ggplot(data = app_prop_dat, 
+           aes(x = Treatment, 
                y = proportion, 
-               fill = category)) + 
+               fill = Category)) + 
       geom_bar(stat = "identity", 
                position = "fill") + 
+      ylim(0,1) +
       labs(
         x = "Treatment",
-        y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = "All prices from invoices") +
+        y = expression(Proportion~('%')),
+        subtitle = expression(Proportion~of~Application~Expenditure~('%'))) +
       theme_bw() +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
                                         face = "bold.italic"), 
             legend.position="bottom", 
             legend.title = element_blank(), 
-            legend.text = element_text(size = 7)) +
-      facet_wrap(~ crop )
+            # legend.text = element_text(size = 7),
+            axis.text.x = element_text(angle = 45, hjust = 1)) +
+      facet_wrap(~ year) +
+  guides(fill = guide_legend(nrow = 3))
     
-    ggsave(filename = "proportion_plot.png", 
-           path = "plots/04_all_crops/", 
-           width = 7, 
-           height = 6)
-    
-    
-    
-    # this is the legend title with correct notation
-    title_exp <- expression(Proportion~('%')~of~Crop~Expenditure~('£'~ha^{-1}))
-    y_title <- expression(Proportion~('%'))
-    
-    
-unique(app_dat$crop)    
-app_dat$crop <- factor(x = app_dat$crop, 
-                       levels = c("Spring beans", "Winter wheat", "Oilseed Rape", "Spring Barley"))
+
 
     
-    ggplot(data = app_dat, 
+    ## ~ operations ####
+  
+b <-    ggplot(data = op_prop_dat, 
            aes(x = Treatment, 
-               y = cost_per_ha, 
+               y = proportion, 
                fill = Category)) + 
       geom_bar(stat = "identity", 
                position = "fill") + 
+      ylim(0,1) +
       labs(
         x = "Treatment",
-        y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = "All prices from invoices") +
+        y = expression(Proportion~('%')),
+        subtitle = expression(Proportion~of~Operations~Expenditure~('%'))) +
       theme_bw() +
       theme(strip.text.x = element_text(size = 12, 
                                         color = "black", 
                                         face = "bold.italic"), 
             legend.position="bottom", 
             legend.title = element_blank(), 
-            legend.text = element_text(size = 10)) +
-      facet_wrap(~ year, ncol = 4)
+            # legend.text = element_text(size = 7),
+            axis.text.x = element_text(angle = 45, hjust = 1)) +
+      facet_wrap(~ year) +
+  guides(fill = guide_legend(nrow = 3))
     
-    ggsave(filename = "crop_input_proportion_plot.png", 
-           path = "plots/04_all_crops/", 
-           width = 7, 
-           height = 6)
+
+
+    
+## ~ total proportion ####
+
+c <-
+ggplot(data = total_prop, 
+       aes(x = Treatment, 
+           y = proportion, 
+           fill = Type)) + 
+  geom_bar(stat = "identity", 
+           position = "fill") + 
+  ylim(0,1) +
+  labs(
+    x = "Treatment",
+    y = expression(Proportion~('%')),
+    subtitle = expression(Proportion~of~Revenue~('%'))) +
+  theme_bw() +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"), 
+        legend.position="bottom", 
+        legend.title = element_blank(), 
+        # legend.text = element_text(size = 7),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ year) +
+  guides(fill = guide_legend(nrow = 3))
     
     
-    
-    
-    
-    # this is the legend title with correct notation
-    title_exp <- expression(Proportion~('%')~of~Operational~Expenditure~('£'~ha^{-1}))
-    y_title <- expression(Proportion~('%'))
-    
-    
-    unique(app_dat$crop)    
-    app_dat$crop <- factor(x = app_dat$crop, 
-                           levels = c("Spring beans", "Winter wheat", "Oilseed Rape", "Spring Barley"))
-    
-    ggplot(data = op_dat, 
-           aes(x = Treatment, 
-               y = cost_per_ha, 
-               fill = Category)) + 
-      geom_bar(stat = "identity", 
-               position = "fill") + 
-      labs(
-        x = "Treatment",
-        y = y_title,
-        title = "Harper Adams Conservation Agriculture Experiment", 
-        subtitle = title_exp, 
-        caption = "All prices from invoices") +
-      theme_bw() +
-      theme(strip.text.x = element_text(size = 12, 
-                                        color = "black", 
-                                        face = "bold.italic"), 
-            legend.position="bottom", 
-            legend.title = element_blank(), 
-            legend.text = element_text(size = 10)) +
-      facet_wrap(~ crop )
-    
-    ggsave(filename = "operations_input_proportion_plot.png", 
-           path = "plots/04_all_crops/", 
-           width = 7, 
-           height = 6)
+
+
+## ~ joint plot ####
+
+ggarrange(a,b,c, 
+          ncol = 3, 
+          legend = "bottom", 
+          labels = c("A","B","C"), align = "h")
+
+
+ggsave(filename = "plots/fig_economic_proportions.png", width = 11, height = 6)
+
     
 
              

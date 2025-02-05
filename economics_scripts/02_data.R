@@ -39,28 +39,6 @@ dat$Date <- as.Date(dat$Date)
 dat <- dat[order(dat$Date), ]
 
 
-# expenditure proportions 
-
-# ex_proportions <- read_xlsx(path = "data/04_all/expenditure_proportions.xlsx", 
-#                             sheet = 1, 
-#                             col_names = TRUE)
-
-
-
-# # summary data
-# 
-# summary_dat <- read_xlsx(path = "data/04_all/economic_summary.xlsx", 
-#                          sheet = 1, 
-#                          col_names = TRUE)
-
-
-# # wheat yield data 
-# 
-# wheat_yield_dat <- read.csv(file = "data/02_wheat/2023.yield.wheat.csv")
-
-
-
-
 
 ## ~ add year ####
 
@@ -89,7 +67,7 @@ app_dat <- subset(dat, dat$Type == "Application")
 op_dat <- subset(dat, dat$Type == "Operation")
 
 
-
+glimpse(app_dat)
 
 
 
@@ -190,7 +168,7 @@ app_dat <- app_dat %>%
   mutate(accumulated_cost_ha = cumsum(cost_per_ha))
 
 
-
+glimpse(app_dat)
 
 
 
@@ -247,20 +225,6 @@ dat <- dat %>%
 
 
 
-# ~~~~~~~~~~ ####
-# ~ PROPORTIONS ####
-
-
-# # Calculates mean, sd, se and IC - block
-# prop_sum <- dat %>%
-#   group_by(Treatment, year, ) %>%
-#   summarise(
-#     n=n(),
-#     mean=mean(gross_margin),
-#     sd=sd(gross_margin)
-#   ) %>%
-#   mutate( se=sd/sqrt(n))  %>%
-#   mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
 
 
 
@@ -589,7 +553,72 @@ crop_expenditure_sum <- app_dat %>%
 
 
 
+# ~~~~~~~~~~ ####
+# ~ PROPORTIONS ####
 
+app_proportions <- 
+  app_dat %>%
+  group_by(Treatment, year, Category, Type) %>%
+  summarise(total_cost_per_ha = sum(cost_per_ha, na.rm = TRUE), .groups = "drop") %>%
+  group_by(Treatment, year) %>%
+  mutate(proportion = total_cost_per_ha / sum(total_cost_per_ha)) %>%
+  arrange(Treatment, year, desc(proportion))
+
+
+op_proportions <- 
+  op_dat %>%
+  group_by(Treatment, year, Category, Type) %>%
+  summarise(total_cost_per_ha = sum(cost_per_ha, na.rm = TRUE), .groups = "drop") %>%
+  group_by(Treatment, year) %>%
+  mutate(proportion = total_cost_per_ha / sum(total_cost_per_ha)) %>%
+  arrange(Treatment, year, desc(proportion))
+
+
+combined_proportions <- rbind(app_proportions[,1:5], op_proportions[,1:5])
+
+glimpse(combined_proportions)
+glimpse(gm_sum)
+
+
+# Add the revenue data as rows with Category set to "Profit"
+gm_sum_long <- gm_sum %>%
+  select(treatment, year, mean) %>%
+  rename(Treatment = treatment) %>%
+  mutate(Category = "Profit", 
+         Type = "Profit", 
+         total_cost_per_ha = mean) %>%
+  select(Treatment, year, Category, Type, total_cost_per_ha)
+
+# Ensure the year is correctly populated
+gm_sum_long$year <- as.numeric(as.character(gm_sum_long$year))  # Convert year to numeric
+
+# Bind the rows of combined_proportions and rev_sum_long
+combined_proportions <- bind_rows(combined_proportions, gm_sum_long)
+
+glimpse(combined_proportions)
+
+
+# Calculate the proportion of total_cost_per_ha within each group
+combined_proportions <- combined_proportions %>%
+  group_by(Treatment, year, Type) %>%
+  mutate(total_group_cost = sum(total_cost_per_ha)) %>%  # Calculate the total cost for each group
+  ungroup() %>%
+  mutate(proportion = total_cost_per_ha / total_group_cost)  # Calculate the proportion
+
+# Check the results
+glimpse(combined_proportions)
+
+write.csv(x = combined_proportions, file = "data/processed_data/expen_and_revenue_proportions.csv")
+
+
+# Calculate the proportion of total_cost_per_ha within each group
+total_proportion <- combined_proportions %>%
+  group_by(Treatment, year) %>%
+  mutate(total_group_cost = sum(total_cost_per_ha)) %>%  # Calculate the total cost for each group
+  ungroup() %>%
+  mutate(proportion = total_cost_per_ha / total_group_cost)  # Calculate the proportion
+
+write.csv(x = total_proportion, file = "data/processed_data/total_proportion.csv")
 
 
 

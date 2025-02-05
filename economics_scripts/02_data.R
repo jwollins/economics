@@ -252,9 +252,9 @@ dat <- dat %>%
 
 
 # # Calculates mean, sd, se and IC - block
-# prop_sum <- summary_dat %>%
-#   group_by(treatment, year, ) %>%
-#   summarise( 
+# prop_sum <- dat %>%
+#   group_by(Treatment, year, ) %>%
+#   summarise(
 #     n=n(),
 #     mean=mean(gross_margin),
 #     sd=sd(gross_margin)
@@ -569,6 +569,23 @@ grain_expenditure_sum <- summary_dat %>%
   ) %>%
   mutate( se = sd/sqrt(n))  %>%
   mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+
+
+
+
+# ~~ Expenditure propotions ####
+
+# Calculates mean, sd, se and IC - block
+crop_expenditure_sum <- app_dat %>%
+  group_by(treatment, year) %>%
+  summarise( 
+    n = n(),
+    mean = mean(expenditure_Application),
+    sd = sd(expenditure_Application)
+  ) %>%
+  mutate( se = sd/sqrt(n))  %>%
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+
 
 
 

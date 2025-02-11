@@ -121,8 +121,8 @@ yield_corr_plot <-
        subtitle = "All crops") +
    ylim(-1,2.5) +
   annotate("text", 
-           x = max(global_CA_dat_wwheat$Years.since.NT.started..yrs., na.rm = TRUE) * 0.7, 
-           y = max(global_CA_dat_wwheat$Relative.yield.change, na.rm = TRUE) * 0.9, 
+           x = 40, 
+           y = 2, 
            label = paste0("italic(r) == ", round(correlation, 2)), 
            size = 5, color = "red", 
            parse = TRUE) +
@@ -188,7 +188,7 @@ ggsave(filename = "plots/simulation_plots/rel_yield_change_wwheat.png", width = 
 lm_model <- lm(Relative.yield.change ~ Years.since.NT.started..yrs., data = global_CA_dat_wwheat)
 summary(lm_model)
 
-start_yield_reduction <- coef(lm_model)[1]  # Extract intercept
+# start_yield_reduction <- coef(lm_model)[1]  # Extract intercept
 
 
 
@@ -410,19 +410,11 @@ ggsave(filename = "plots/distributions/economic_histograms.png")
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
-#  Economic Model ####
+#  Model Stats ####
 
 
 # Number of simulations
 n_sim <- 10000
-
-
-
-
-
-
-
-
 
 
 
@@ -433,7 +425,9 @@ n_sim <- 10000
 
 
 rotation_conventional <- c("Winter Wheat", "Winter Barley", "Oilseed Rape")
-rotation_conservation <- c("Winter Beans", "Winter Wheat", "Spring Barley", "Oilseed Rape", "Feed Peas", "Winter Wheat")
+
+rotation_conservation <- c("Winter Beans", "Winter Wheat", "Spring Barley", 
+                           "Oilseed Rape", "Feed Peas", "Winter Wheat")
 
 # Repeat rotations to match a 12-year period
 rotation_conventional_full <- rep(rotation_conventional, length.out = 12)
@@ -469,59 +463,12 @@ mean_yield_wosr_con <- yield_middle_50_pc$winter_osr
 sd_yield_wosr_con <- yield_sd$winter_osr 
 
 
-# Simulate yields for each crop in the rotation for each treatment
-yield_wheat_con <- rnorm(n_sim, mean_yield_wheat_con, sd_yield_wheat_con)
-yield_wbarley_con <- rnorm(n_sim, mean_yield_wbarley_con, sd_yield_wbarley_con)
-yield_wosr_con <- rnorm(n_sim, mean_yield_wosr_con, sd_yield_wosr_con)
-
-
-
-
-
 
 # ~ CON crop prices ####
 
-# Optionally: Compute additional metrics (e.g., price, expenditure)
-# Define price and expenditure parameters (you can adjust these for each crop too)
 mean_price_wheat_con <- historic_wheat_price
 mean_price_wbarley_con <- historic_barley_price
 mean_price_wosr_con <- historic_wosr_price
-
-
-# Simulate prices for each crop in the rotation
-price_wheat_con <- rnorm(n = n_sim, 
-                         mean = historic_wheat_price, 
-                         sd = historic_wheat_sd)
-
-price_wbarley_con <- rnorm(n = n_sim, 
-                           mean = historic_barley_price, 
-                           sd = historic_barley_sd)
-
-price_wosr_con <- rnorm(n = n_sim, 
-                        mean = historic_wosr_price, 
-                        sd = historic_wosr_sd)
-
-
-
-
-
-
-# ~ CON crop revenue ####
-
-# # Calculate revenue for each treatment (revenue = yield * price)
-# revenue_conventional <- (
-#   (yield_wheat_con * price_wheat_con) + 
-#   (yield_wbarley_con * price_wbarley_con) +
-#   (yield_wosr_con * price_wosr_con) * 5)
-
-
-# Assign revenue based on the selected crop
-revenue_conventional <- ifelse(
-  crop_sequence_conventional == "Winter Wheat", yield_wheat_con * price_wheat_con,
-  ifelse(crop_sequence_conventional == "Winter Barley", yield_wbarley_con * price_wbarley_con,
-         yield_wosr_con * price_wosr_con)  # Oilseed Rape as default
-)
-
 
 
 
@@ -536,94 +483,32 @@ revenue_conventional <- ifelse(
 
 #Rotation: winter beans / winter wheat / spring Barley / oilseed rape / feed peas / winter wheat
 
-mean_yield_wbeans_ca <- yield_middle_50_pc$winter_beans
-sd_yield_wbeans_ca <- yield_sd$winter_beans
+mean_yield_wbeans_ca <- yield_middle_50_pc$winter_beans - ca_start_yield_reduction
+sd_yield_wbeans_ca <- yield_sd$winter_beans - ca_start_yield_reduction
 
-yield_wbeans_ca <- rnorm(n = n_sim, 
-                         mean = mean_yield_wbeans_ca, 
-                         sd = sd_yield_wbeans_ca)
+mean_yield_wheat_ca <- yield_middle_50_pc$winter_wheat  - ca_start_yield_reduction
+sd_yield_wheat_ca <- yield_sd$winter_wheat - ca_start_yield_reduction
 
-mean_yield_wheat_ca <- yield_middle_50_pc$winter_wheat  
-sd_yield_wheat_ca <- yield_sd$winter_wheat   # Standard deviation for wheat yield
-yield_wheat_ca <- rnorm(n_sim, mean_yield_wheat_ca, sd_yield_wheat_ca)
+mean_yield_sbarley_ca <- yield_middle_50_pc$spring_barley - ca_start_yield_reduction
+sd_yield_sbarley_ca <- yield_sd$spring_barley - ca_start_yield_reduction
 
-mean_yield_sbarley_ca <- yield_middle_50_pc$spring_barley
-sd_yield_sbarley_ca <- yield_sd$spring_barley
-yield_sbarley_ca <- rnorm(n_sim, mean_yield_sbarley_ca, sd_yield_sbarley_ca)
+mean_yield_wosr_ca <- yield_middle_50_pc$winter_osr - ca_start_yield_reduction
+sd_yield_wosr_ca <- yield_sd$winter_osr - ca_start_yield_reduction
 
-mean_yield_wosr_ca <- yield_middle_50_pc$winter_osr 
-sd_yield_wosr_ca <- yield_sd$winter_osr 
-yield_wosr_ca <- rnorm(n_sim, mean_yield_wosr_ca, sd_yield_wosr_ca)
-
-mean_yield_peas_ca <- yield_middle_50_pc$feed_peas
-sd_yield_peas_ca <- yield_sd$feed_peas
-yield_peas_ca <- rnorm(n_sim, mean_yield_peas_ca, sd_yield_peas_ca)
-
-
-
-
+mean_yield_peas_ca <- yield_middle_50_pc$feed_peas - ca_start_yield_reduction
+sd_yield_peas_ca <- yield_sd$feed_peas - ca_start_yield_reduction
 
 
 
 # ~ CA crop prices ####
 
+mean_price_wbeans_ca <- historic_wbeans_price
+mean_price_wheat_ca <- historic_wheat_price
 
-# Simulate prices for each crop in the rotation
-price_wheat_ca <- rnorm(
-  n = n_sim, 
-  mean = historic_wheat_price, 
-  sd = historic_wheat_sd)
+mean_price_barley_ca <- historic_barley_price
+mean_price_wosr_ca <- historic_wosr_price
 
-price_wbeans_ca <- rnorm(
-  n = n_sim, 
-  mean = 180, 
-  sd = 15)
-
-price_peas_ca <- rnorm(
-  n = n_sim, 
-  mean = 210, 
-  sd = 15)
-
-price_sbarley_ca <- rnorm(
-  n = n_sim, 
-  mean = historic_barley_price, 
-  sd = historic_barley_sd)
-
-price_wosr_ca <- rnorm(
-  n = n_sim, 
-  mean = historic_wosr_price, 
-  sd = historic_wosr_sd)
-
-
-
-# ~ CA crop revenue ####
-
-# revenue_conservation <- (
-#   (yield_wbeans_ca * price_wbeans_ca) + 
-#   (yield_wheat_ca * price_wheat_ca) +
-#   (yield_sbarley_ca * price_sbarley_ca) +
-#   (yield_wosr_ca * price_wosr_ca) +
-#   (yield_peas_ca * price_peas_ca) * 3)
-
-revenue_conservation <- ifelse(
-  crop_sequence_conservation == "Winter Beans", yield_wbeans_ca * price_wbeans_ca,
-  ifelse(crop_sequence_conservation == "Winter Wheat", yield_wheat_ca * price_wheat_ca,
-         ifelse(crop_sequence_conservation == "Spring Barley", yield_sbarley_ca * price_sbarley_ca,
-                ifelse(crop_sequence_conservation == "Oilseed Rape", yield_wosr_ca * price_wosr_ca,
-                       ifelse(crop_sequence_conservation == "Feed Peas", yield_peas_ca * price_peas_ca, 0)))))
-
-
-
-# # Combine yields for each treatment (total yield for each rotation)
-# # For example, you might want to sum or average the yields for each rotation
-# total_yield_conventional <- yield_wheat_con + yield_maize_con  # Sum of yields for Conventional Agriculture
-# total_yield_conservation <- yield_legumes_con + yield_barley_con  # Sum of yields for Conservation Agriculture
-
-
-
-
-
-
+mean_price_peas_ca <- historic_peas_price
 
 
 
@@ -662,177 +547,6 @@ sbarley_expenditure_sd <- sd(x = ahdb_expenditure_dat$spring_barley, na.rm = TRU
 
 
 
-glimpse(dat)
-
-
-
-## ~ CON expenditure simulation ####
-
-# Simulate the expenditure for each crop in the rotation
-expen_wheat_con <- rnorm(
-  n = n_sim, 
-  mean = wheat_expenditure_mean, 
-  sd = wheat_expenditure_sd)
-
-expen_wbarley_con <- rnorm(
-  n = n_sim, 
-  mean = wbarley_expenditure_mean, 
-  sd = wbarley_expenditure_sd)
-
-expen_wosr_con <- rnorm(
-  n = n_sim, 
-  mean = wosr_expenditure_mean, 
-  sd = wosr_expenditure_sd)
-
-
-
-## ~ CON expenditure sum ####
-
-# Calculate revenue for each treatment (revenue = yield * price)
-expenditure_conventional <- ifelse(
-  crop_sequence_conventional == "Winter Wheat", expen_wheat_con,
-  ifelse(crop_sequence_conventional == "Winter Barley", expen_wbarley_con,
-         expen_wosr_con)  # Oilseed Rape as default
-)
-
-
-
-
-
-
-## ~ CA expenditure simulation ####
-
-# ACCOUNT FOR 17% REDUCTION IN EXPENDITURE BASED ON OUR DATA 
-
-#view the rotation
-print(rotation_conservation)
-
-# then view the pc difference in our study
-print(percentage_diff)
-
-
-
-# Simulate the expenditure for each crop in the rotation
-expen_wbeans_ca <- rnorm(
-  n = n_sim, 
-  mean = wbeans_expenditure_mean * (1 - 0.17), 
-  sd = wbeans_expenditure_sd * (1 - 0.17))
-
-expen_wheat_ca <- rnorm(
-  n = n_sim, 
-  mean = wheat_expenditure_mean * (1 - 0.17), 
-  sd = wheat_expenditure_sd * (1 - 0.17))
-
-expen_sbarley_ca <- rnorm(
-  n = n_sim, 
-  mean = sbarley_expenditure_mean * (1 - 0.17), 
-  sd = sbarley_expenditure_sd * (1 - 0.17))
-
-expen_wosr_ca <- rnorm(
-  n = n_sim, 
-  mean = wosr_expenditure_mean * (1 - 0.17), 
-  sd = wosr_expenditure_sd * (1 - 0.17))
-
-expen_peas_ca <- rnorm(
-  n = n_sim, 
-  mean = peas_expenditure_mean * (1 - 0.17), 
-  sd = peas_expenditure_sd * (1 - 0.17))
-
-
-
-expenditure_conservation <- ifelse(
-  crop_sequence_conservation == "Winter Beans", expen_wbeans_ca,
-  ifelse(crop_sequence_conservation == "Winter Wheat", expen_wheat_ca,
-         ifelse(crop_sequence_conservation == "Spring Barley", expen_sbarley_ca,
-                ifelse(crop_sequence_conservation == "Oilseed Rape", expen_wosr_ca,
-                       ifelse(crop_sequence_conservation == "Feed Peas", expen_peas_ca, 0)))))
-
-
-
-
-
-
-# # Cost for Conventional Agriculture (fixed or variable)
-# mean_expenditure_conventional <- mean(con_dat$total_expenditure_ha)  
-
-
-# # Cost for Conservation Agriculture (fixed or variable)
-# mean_expenditure_conservation <- mean(ca_dat$total_expenditure_ha)
-
-
-
-# # Simulate expenditure for each treatment (for simplicity, we keep it constant here)
-# expenditure_conventional <- rnorm(n_sim, 
-#                                   mean = mean_expenditure_conventional, 
-#                                   sd = sd(con_dat$total_expenditure_ha))
-
-# expenditure_conservation <- rnorm(n_sim,
-#                                   mean =  mean_expenditure_conservation, 
-#                                   sd = sd(ca_dat$total_expenditure_ha))
-
-
-
-
-
-
-
-# ~~~~~~~~~~~~####
-# Gross Margin ####
-
-
-
-# ~ calculation ####
-
-# Calculate gross margin for each treatment (gross margin = revenue - expenditure)
-gross_margin_conventional <- revenue_conventional - expenditure_conventional
-gross_margin_conservation <- revenue_conservation - expenditure_conservation
-
-
-
-# Store the results in a data frame for easier analysis
-results <- data.frame(
-  gross_margin_conventional = gross_margin_conventional,
-  gross_margin_conservation = gross_margin_conservation
-)
-
-# You can now analyze the results, for example:
-summary(results)
-
-
-
-# Combine the results into a long format data frame for ggplot
-results_long <- data.frame(
-  gross_margin = c(gross_margin_conventional, gross_margin_conservation),
-  treatment = rep(c("Conventional", "Conservation"), each = n_sim)
-)
-
-
-
-
-# ~ plots ####
-
-# Plot density plots for both treatments
-ggplot(results_long, aes(x = gross_margin, fill = treatment)) +
-  geom_density(alpha = 0.5) +
-  labs(title = "12 Year Gross Margin Distribution by Treatment ha-1",
-       x = "Gross Margin",
-       y = "Density") +
-  theme_minimal() +
-  scale_fill_manual(values = c("blue", "green"))
-
-# Plot boxplots for both treatments
-ggplot(results_long, aes(x = treatment, y = gross_margin, fill = treatment)) +
-  geom_boxplot() +
-  labs(title = "Boxplot of Gross Margin by Treatment",
-       x = "Treatment",
-       y = "Gross Margin") +
-  theme_minimal() +
-  scale_fill_manual(values = c("blue", "green"))
-
-
-
-
-
 
 
 
@@ -845,27 +559,67 @@ ggplot(results_long, aes(x = treatment, y = gross_margin, fill = treatment)) +
 
 # ~ Function ####
 
-# Simulate 12 years of yield trends for each crop
-simulate_yield_trend_con <- function(initial_yield, drift, volatility, years = 12) {
-  yield_series <- numeric(years)
-  yield_series[1] <- initial_yield  # Start with the historical yield
-  
-  for (t in 2:years) {
-    yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
+# # Simulate 12 years of yield trends for each crop
+# simulate_yield_trend_con <- function(initial_yield, drift, volatility, years = 12) {
+#   yield_series <- numeric(years)
+#   yield_series[1] <- initial_yield  # Start with the historical yield
+# 
+#   for (t in 2:years) {
+#     yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
+#   }
+#   return(yield_series)
+# }
+# 
+# 
+# 
+# simulate_yield_trend_ca <- function(initial_yield, drift, volatility, years = 12) {
+#   yield_series <- numeric(years)
+#   yield_series[1] <- initial_yield  # Start with the historical yield
+# 
+#   for (t in 2:years) {
+#     yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
+#   }
+#   return(yield_series)
+# }
+
+simulate_yield_trend_con <- function(initial_yield, drift, volatility, years = 12, n_sim = 1000) {
+  # Create a dataframe with simulations
+  sim_data <- expand.grid(Year = 1:years, run = 1:n_sim) %>%
+    mutate(Yield = NA)
+
+  # Simulate for each run
+  for (i in 1:n_sim) {
+    yield_series <- numeric(years)
+    yield_series[1] <- initial_yield
+
+    for (t in 2:years) {
+      yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
+    }
+
+    sim_data$Yield[sim_data$run == i] <- yield_series
   }
-  return(yield_series)
+
+  return(sim_data)
 }
 
+simulate_yield_trend_ca <- function(initial_yield, drift, volatility, years = 12, n_sim = 1000) {
+  # Create a dataframe with simulations
+  sim_data <- expand.grid(Year = 1:years, run = 1:n_sim) %>%
+    mutate(Yield = NA)
 
+  # Simulate for each run
+  for (i in 1:n_sim) {
+    yield_series <- numeric(years)
+    yield_series[1] <- initial_yield
 
-simulate_yield_trend_ca <- function(initial_yield, drift, volatility, years = 12) {
-  yield_series <- numeric(years)
-  yield_series[1] <- initial_yield  # Start with the historical yield
-  
-  for (t in 2:years) {
-    yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
+    for (t in 2:years) {
+      yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
+    }
+
+    sim_data$Yield[sim_data$run == i] <- yield_series
   }
-  return(yield_series)
+
+  return(sim_data)
 }
 
 
@@ -898,14 +652,15 @@ yield_volatility <- 0.03
 # Conventional 
 yield_wheat_trend_con <- simulate_yield_trend_con(initial_yield = mean_yield_wheat_con, 
                                               drift = yield_drift_con, 
-                                              volatility = yield_volatility)
+                                              volatility = yield_volatility, n_sim = 1000)
 
 yield_wbarley_trend_con <- simulate_yield_trend_con(initial_yield = mean_yield_wbarley_con, 
                                                 drift = yield_drift_con, 
-                                                volatility = yield_volatility)
+                                                volatility = yield_volatility, n_sim = 1000)
+
 yield_wosr_trend_con <- simulate_yield_trend_con(initial_yield = mean_yield_wosr_con, 
                                              drift = yield_drift_con, 
-                                             volatility = yield_volatility)
+                                             volatility = yield_volatility, n_sim = 1000)
 
 
 
@@ -914,38 +669,168 @@ yield_wosr_trend_con <- simulate_yield_trend_con(initial_yield = mean_yield_wosr
 
 # Conservation
 
-# ACCOUNT FOR LOWER INITIAL YIELD 
+# THIS ALREADY ACCOUNTS FOR LOWER INITIAL YIELD 
 
-# view pc diff of lower yield 
-print(percentage_diff)
-
-
-
-yield_wheat_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wheat_ca - ca_start_yield_reduction, 
+yield_wheat_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wheat_ca, 
                                              drift = yield_drift_ca, 
-                                             volatility = yield_volatility)
+                                             volatility = yield_volatility, n_sim = 1000)
 
-yield_wbarley_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wbarley_con - ca_start_yield_reduction, 
+yield_wbarley_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wbarley_con, 
                                                drift = yield_drift_ca, 
-                                               volatility = yield_volatility)
+                                               volatility = yield_volatility, n_sim = 1000)
 
-yield_wosr_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wosr_con - ca_start_yield_reduction, 
+yield_wosr_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wosr_con, 
                                             drift = yield_drift_ca, 
-                                            volatility = yield_volatility)
+                                            volatility = yield_volatility, n_sim = 1000)
 
-yield_wbeans_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wbeans_ca - ca_start_yield_reduction, 
+yield_wbeans_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wbeans_ca, 
                                               drift = yield_drift_ca, 
-                                              volatility = yield_volatility)
+                                              volatility = yield_volatility, n_sim = 1000)
 
-yield_sbarley_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_sbarley_ca - ca_start_yield_reduction, 
+yield_sbarley_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_sbarley_ca, 
                                                drift = yield_drift_ca, 
-                                               volatility = yield_volatility)
+                                               volatility = yield_volatility, n_sim = 1000)
 
-yield_fpeas_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_peas_ca - ca_start_yield_reduction, 
+yield_fpeas_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_peas_ca, 
                                              drift = yield_drift_ca, 
-                                             volatility = yield_volatility)
+                                             volatility = yield_volatility, n_sim = 1000)
 
 
+
+
+
+####### test #####
+
+# Add a "Crop" column to each dataset
+
+# Conventional
+yield_wheat_trend_con$Crop <- "Winter Wheat"
+yield_wbarley_trend_con$Crop <- "Winter Barley"
+yield_wosr_trend_con$Crop <- "Oilseed Rape"
+
+
+# Conservation
+yield_wheat_trend_ca$Crop <- "Winter Wheat"
+yield_wbarley_trend_ca$Crop <- "Winter Barley"
+yield_wosr_trend_ca$Crop <- "Oilseed Rape"
+yield_wbeans_trend_ca$Crop <- "Winter Beans"
+yield_sbarley_trend_ca$Crop <- "Spring Barley"
+yield_fpeas_trend_ca$Crop <- "Feed Peas"
+
+
+# Combine all simulated yield datasets
+yield_sim_con <- bind_rows(yield_wheat_trend_con,
+                           yield_wbarley_trend_con,
+                           yield_wosr_trend_con)
+
+
+yield_sim_ca <- bind_rows(yield_wheat_trend_ca,
+                          yield_wbarley_trend_ca,
+                           yield_wosr_trend_ca, 
+                          yield_wbeans_trend_ca, 
+                          yield_sbarley_trend_ca, 
+                          yield_fpeas_trend_ca)
+
+
+# Combine both datasets
+yield_sim_all <- rbind(
+  data.frame(yield_sim_con, System = "Conventional"),
+  data.frame(yield_sim_ca, System = "Conservation")
+)
+
+
+
+# ~ summarise the dataset ####
+
+
+# Summarize the mean and confidence intervals
+yield_summary_con <- yield_sim_con %>%
+  group_by(Year, Crop) %>%
+  summarise(
+    mean_yield = mean(Yield),
+    ymin = quantile(Yield, 0.025),  # 2.5% percentile (lower bound)
+    ymax = quantile(Yield, 0.975)   # 97.5% percentile (upper bound)
+  )
+
+
+# Summarize the mean and confidence intervals
+yield_summary_ca <- yield_sim_ca %>%
+  group_by(Year, Crop) %>%
+  summarise(
+    mean_yield = mean(Yield),
+    ymin = quantile(Yield, 0.025),  # 2.5% percentile (lower bound)
+    ymax = quantile(Yield, 0.975)   # 97.5% percentile (upper bound)
+  )
+
+
+# Combine both datasets
+yield_sim_summary_all <- rbind(
+  data.frame(yield_summary_con, System = "Conventional"),
+  data.frame(yield_summary_ca, System = "Conservation")
+)
+
+
+
+
+
+names(yield_sim_summary_all)
+
+# Create the plot using facets instead of separate plots
+
+  ggplot(data = yield_sim_summary_all, 
+         aes(x = Year, 
+             y = mean_yield, 
+             color = Crop)) +
+  geom_line(size = 1.2) +
+    geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = Crop), alpha = 0.2) +
+    labs(title = "Simulated Yield Trends",
+         x = "Year",
+         y = "Yield (t/ha)") +
+  theme_minimal() +
+  facet_wrap(~ System, 
+             ncol = 2) +  # Facet by system
+  theme(legend.position = "bottom", 
+        strip.text = element_text(size = 15, hjust = 0))
+
+
+# Plot with confidence interval
+ggplot(data = yield_sim_all, 
+       aes(x = Year, 
+           y = mean_yield, 
+           color = Crop)) +
+  geom_line(size = 1) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = Crop), alpha = 0.2) +
+  labs(title = "Simulated Yield Trends",
+       x = "Year",
+       y = "Yield (t/ha)") +
+  theme_minimal()
+
+
+
+
+names(yield_sim_all)
+
+ggplot(yield_sim_all, 
+       aes(x = Year, 
+           y = Yield, 
+           group = interaction(Crop, as.factor(run)))) +
+  geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
+  labs(title = "Simulated Yield Trends (1000 Simulations)",
+       x = "Year",
+       y = "Yield (t/ha)") +
+  facet_wrap(~ System, 
+             ncol = 2) +
+  theme_minimal() + guides(colour = guide_legend(override.aes = list(alpha = 1, linewidth = 5))) + 
+  theme(legend.position = "bottom")
+
+
+
+
+
+
+
+
+# #################
 
 
 
@@ -967,48 +852,8 @@ yield_sim_con <- data.frame(
              each = 12)
 )
 
-# plot the yield simulation
-
-ggplot(data = yield_sim_con, 
-       aes(x = Year, 
-           y = Yield, 
-           color = Crop)) +
-  geom_line(size = 1.2) +
-  labs(title = "Conventional: Simulated Yield Trends Over 12 Years", 
-       y = "Yield (kg/ha)", 
-       x = "Year") +
-  theme_minimal()
-
-
-
 
 # Conservation
-# make the yield df 
-
-# yield_wheat_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wheat_ca, 
-#                                              drift = yield_drift_ca, 
-#                                              volatility = yield_volatility)
-# 
-# yield_wbarley_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wbarley_con, 
-#                                                drift = yield_drift_ca, 
-#                                                volatility = yield_volatility)
-# 
-# yield_wosr_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wosr_ca, 
-#                                             drift = yield_drift_ca, 
-#                                             volatility = yield_volatility)
-# 
-# yield_wbeans_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_wbeans_ca, 
-#                                               drift = yield_drift_ca, 
-#                                               volatility = yield_volatility)
-# 
-# yield_sbarley_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_sbarley_ca,
-#                                                drift = yield_drift_ca,
-#                                                volatility = yield_volatility)
-# 
-# yield_fpeas_trend_ca <- simulate_yield_trend_ca(initial_yield = mean_yield_peas_ca, 
-#                                              drift = yield_drift_ca, 
-#                                              volatility = yield_volatility)
-
 
 yield_sim_ca <- data.frame(
   Year = rep(1:12, 6),
@@ -1026,21 +871,6 @@ yield_sim_ca <- data.frame(
                "Feed Peas"), 
              each = 12)
 )
-
-# plot the yield simulation
-
-
-
-ggplot(data = yield_sim_ca, 
-       aes(x = Year,
-           y = Yield, 
-           color = Crop)) +
-  geom_line(size = 1.2) +
-  labs(title = "Conservation: Simulated Yield Trends Over 12 Years", 
-       y = "Yield (t ha-1)", 
-       x = "Year") +
-  theme_minimal()
-
 
 
 
@@ -1200,10 +1030,21 @@ ggplot(data = price_data,
 # ~ Function ####
 
 # Apply climate shocks to yield trends
-apply_climate_shocks <- function(yield_trend) {
+
+apply_climate_shocks_con <- function(yield_trend) {
   for (year in 1:length(yield_trend)) {
-    if (runif(1) < climate_shock_prob[year]) {  # Climate event occurs
-      yield_trend[year] <- yield_trend[year] * (1 - climate_shock_severity())
+    if (runif(1) < climate_shock_prob_con[year]) {  # Climate event occurs
+      yield_trend[year] <- yield_trend[year] * (1 - climate_shock_severity_con())
+    }
+  }
+  return(yield_trend)
+}
+
+
+apply_climate_shocks_ca <- function(yield_trend) {
+  for (year in 1:length(yield_trend)) {
+    if (runif(1) < climate_shock_prob_ca[year]) {  # Climate event occurs
+      yield_trend[year] <- yield_trend[year] * (1 - climate_shock_severity_ca())
     }
   }
   return(yield_trend)
@@ -1233,18 +1074,18 @@ climate_shock_severity_ca <- function() runif(1, min = 0.05, max = 0.15)
 # Apply shocks to each crop
 
 # Conventional 
-yield_wheat_trend_con <- apply_climate_shocks(yield_wheat_trend_con)
-yield_wbarley_trend_con <- apply_climate_shocks(yield_wbarley_trend_con)
-yield_wosr_trend_con <- apply_climate_shocks(yield_wosr_trend_con)
+yield_wheat_trend_con <- apply_climate_shocks_con(yield_wheat_trend_con)
+yield_wbarley_trend_con <- apply_climate_shocks_con(yield_wbarley_trend_con)
+yield_wosr_trend_con <- apply_climate_shocks_con(yield_wosr_trend_con)
 
 
 # Conservation
-yield_wbeans_trend_ca <- apply_climate_shocks(yield_wbeans_trend_ca)
-yield_sbarley_trend_ca <- apply_climate_shocks(yield_sbarley_trend_ca)
-yield_fpeas_trend_ca <- apply_climate_shocks(yield_fpeas_trend_ca)
-yield_wheat_trend_ca <- apply_climate_shocks(yield_wheat_trend_ca)
-yield_wbarley_trend_ca <- apply_climate_shocks(yield_wbarley_trend_ca)
-yield_wosr_trend_ca <- apply_climate_shocks(yield_wosr_trend_ca)
+yield_wbeans_trend_ca <- apply_climate_shocks_ca(yield_wbeans_trend_ca)
+yield_sbarley_trend_ca <- apply_climate_shocks_ca(yield_sbarley_trend_ca)
+yield_fpeas_trend_ca <- apply_climate_shocks_ca(yield_fpeas_trend_ca)
+yield_wheat_trend_ca <- apply_climate_shocks_ca(yield_wheat_trend_ca)
+yield_wbarley_trend_ca <- apply_climate_shocks_ca(yield_wbarley_trend_ca)
+yield_wosr_trend_ca <- apply_climate_shocks_ca(yield_wosr_trend_ca)
 
 
 
@@ -1272,10 +1113,10 @@ climate_yield_data_ca <-
   )
 
 
-ggplot(yield_data, aes(x = Year, y = Yield, color = Crop)) +
-  geom_line(size = 1.2) +
-  labs(title = "Yield Trends with Climate Shocks", y = "Yield (kg/ha)", x = "Year") +
-  theme_minimal()
+# ggplot(yield_data, aes(x = Year, y = Yield, color = Crop)) +
+#   geom_line(size = 1.2) +
+#   labs(title = "Yield Trends with Climate Shocks", y = "Yield (kg/ha)", x = "Year") +
+#   theme_minimal()
 
 
 
@@ -1348,32 +1189,48 @@ expenditure_volatility <- 0.02
 
 # Conventional 
 
-expen_wheat_trend <- simulate_expenditure_trend(initial_expenditure = wheat_expenditure_mean, 
+expen_wheat_trend_con <- simulate_expenditure_trend(initial_expenditure = wheat_expenditure_mean, 
                                                 inflation = expenditure_inflation, 
                                                 volatility = expenditure_volatility)
 
-expen_wbarley_trend <- simulate_expenditure_trend(initial_expenditure = wbarley_expenditure_mean, 
+expen_wbarley_trend_con <- simulate_expenditure_trend(initial_expenditure = wbarley_expenditure_mean, 
                                                   inflation = expenditure_inflation, 
                                                   volatility = expenditure_volatility)
 
-expen_wosr_trend <- simulate_expenditure_trend(initial_expenditure = wosr_expenditure_mean, 
+expen_wosr_trend_con <- simulate_expenditure_trend(initial_expenditure = wosr_expenditure_mean, 
                                                inflation = expenditure_inflation, 
                                                volatility = expenditure_volatility)
 
 
 
 
+# Conservation
 
 
-expen_wbeans_trend <- simulate_expenditure_trend(initial_expenditure = wbeans_expenditure_mean, 
+
+
+
+expen_wheat_trend_ca <- simulate_expenditure_trend(initial_expenditure = wheat_expenditure_mean * (1 - 0.2), 
+                                                    inflation = expenditure_inflation, 
+                                                    volatility = expenditure_volatility)
+
+expen_wbarley_trend_ca <- simulate_expenditure_trend(initial_expenditure = wbarley_expenditure_mean * (1 - 0.2), 
+                                                      inflation = expenditure_inflation, 
+                                                      volatility = expenditure_volatility)
+
+expen_wosr_trend_ca <- simulate_expenditure_trend(initial_expenditure = wosr_expenditure_mean * (1 - 0.2), 
+                                                   inflation = expenditure_inflation, 
+                                                   volatility = expenditure_volatility)
+
+expen_wbeans_trend_ca <- simulate_expenditure_trend(initial_expenditure = wbeans_expenditure_mean * (1 - 0.2), 
                                                  inflation = expenditure_inflation, 
                                                  volatility = expenditure_volatility)
 
-expen_sbarley_trend <- simulate_expenditure_trend(initial_expenditure = sbarley_expenditure_mean, 
+expen_sbarley_trend_ca <- simulate_expenditure_trend(initial_expenditure = sbarley_expenditure_mean * (1 - 0.2), 
                                                   inflation = expenditure_inflation, 
                                                   volatility = expenditure_volatility)
 
-expen_fpeas_trend <- simulate_expenditure_trend(initial_expenditure = peas_expenditure_mean, 
+expen_fpeas_trend_ca <- simulate_expenditure_trend(initial_expenditure = peas_expenditure_mean* (1 - 0.2), 
                                                 inflation = expenditure_inflation, 
                                                 volatility = expenditure_volatility)
 
@@ -1381,18 +1238,70 @@ expen_fpeas_trend <- simulate_expenditure_trend(initial_expenditure = peas_expen
 
 
 
-# ~ plot cost inflation ####
+# ~ merge df's ####
 
-expen_data <- data.frame(
+expen_data_con <- data.frame(
   Year = rep(1:12, 3),
   Expenditure = c(expen_wheat_trend, expen_wbarley_trend, expen_wosr_trend),
   Crop = rep(c("Winter Wheat", "Winter Barley", "Oilseed Rape"), each = 12)
 )
 
-ggplot(expen_data, aes(x = Year, y = Expenditure, color = Crop)) +
+expen_data_ca <- data.frame(
+  Year = rep(1:12, 2),
+  Expenditure = c(expen_wheat_trend_ca, expen_wbarley_trend_ca, expen_wosr_trend_ca, 
+                  expen_sbarley_trend_ca, expen_wbeans_trend_ca, expen_fpeas_trend_ca),
+  Crop = rep(c("Winter Wheat", "Winter Barley", "Oilseed Rape", 
+               "Spring Barley", "Winter Beans", "Feed Peas"), each = 12)
+)
+
+
+
+# Combine both datasets
+expenditure_sim_all <- rbind(
+  data.frame(expen_data_con, System = "Conventional"),
+  data.frame(expen_data_ca, System = "Conservation")
+)
+
+
+
+
+## ~~ joint plot ####
+
+
+# Create the plot using facets instead of separate plots
+joint_expenditure_sim_plot <- 
+  ggplot(data = expenditure_sim_all, 
+         aes(x = Year, 
+             y = Expenditure, 
+             color = Crop)) +
   geom_line(size = 1.2) +
-  labs(title = "Expenditure Trends with Inflation", y = "Expenditure (£/ha)", x = "Year") +
-  theme_minimal()
+  labs(y = "Expenditure (£/ha)", 
+       x = "Year", 
+       title = "Simulated Expenditure Trends Over 12 Years") +
+  theme_minimal() +
+  facet_wrap(~ System, 
+             ncol = 2) +  # Facet by system
+  theme(legend.position = "bottom", 
+        strip.text = element_text(size = 15, hjust = 0))
+
+# Display the plot
+joint_expenditure_sim_plot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1402,18 +1311,46 @@ ggplot(expen_data, aes(x = Year, y = Expenditure, color = Crop)) +
 # ~~~~~~~~~~~~~~~~~~~~ ####
 # Updating Gross Margin Calculation ####
 
+# Combine normal vs. worst-case revenue trends
+gross_margin_conventional <- 
+  data.frame(
+    Year = rep(1:12, 3),  # 12 years for each crop
+    GM = c(((yield_wheat_trend_con * price_wheat_trend) - expen_wheat_trend_con), 
+           ((yield_wbarley_trend_con * price_wbarley_trend) - expen_wbarley_trend_con),
+           ((yield_wosr_trend_con * price_wosr_trend) - expen_wosr_trend_con)),
+    Crop = rep(c("Winter Wheat", "Winter Barley", "Oilseed Rape"), each = 12)
+  )
+
+
+gross_margin_conservation <- 
+  data.frame(
+    Year = rep(1:12, 3),  # 12 years for each crop
+    GM = c(((yield_wheat_trend_ca * price_wheat_trend) - expen_wheat_trend_ca), 
+           ((yield_wbarley_trend_ca * price_wbarley_trend) - expen_wbarley_trend_ca),
+           ((yield_wosr_trend_ca * price_wosr_trend) - expen_wosr_trend_ca)),
+    Crop = rep(c("Winter Wheat", "Winter Barley", "Oilseed Rape"), each = 12)
+  )
+
+
+data_worst_case_ca <- 
+  data.frame(
+    Year = rep(1:12, 2),
+    Revenue = c(yield_wheat_trend_ca * price_wheat_trend, yield_wheat_worst_ca * price_wheat_worst_ca),
+    Scenario = rep(c("Normal", "Worst-Case"), each = 12)
+  )
+
 gross_margin_conventional <- (
-  ((yield_wheat_trend_con * price_wheat_trend) - expen_wheat_trend) + 
-    ((yield_wbarley_trend * price_wbarley_trend) - expen_wbarley_trend) +
-    ((yield_wosr_trend * price_wosr_trend) - expen_wosr_trend)
+  ((yield_wheat_trend_con * price_wheat_trend) - expen_wheat_trend_con) + 
+    ((yield_wbarley_trend_con * price_wbarley_trend) - expen_wbarley_trend_con) +
+    ((yield_wosr_trend_con * price_wosr_trend) - expen_wosr_trend_con)
 )
 
 gross_margin_conservation <- (
-  ((yield_wbeans_trend * price_wbeans_trend) - expen_wbeans_trend) + 
-    ((yield_wheat_trend * price_wheat_trend) - expen_wheat_trend) +
-    ((yield_sbarley_trend * price_sbarley_trend) - expen_sbarley_trend) +
-    ((yield_wosr_trend * price_wosr_trend) - expen_wosr_trend) +
-    ((yield_fpeas_trend * price_fpeas_trend) - expen_fpeas_trend)
+  ((yield_wbeans_trend_ca * price_wbeans_trend) - expen_wbeans_trend_ca) + 
+    ((yield_wheat_trend_ca * price_wheat_trend) - expen_wheat_trend_ca) +
+    ((yield_sbarley_trend_ca * price_sbarley_trend) - expen_sbarley_trend_ca) +
+    ((yield_wosr_trend_ca * price_wosr_trend) - expen_wosr_trend_ca) +
+    ((yield_fpeas_trend_ca * price_fpeas_trend) - expen_fpeas_trend_ca)
 )
 
 
@@ -1473,15 +1410,21 @@ ggplot(results_long, aes(x = treatment, y = gross_margin, fill = treatment)) +
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # Risk Assessment: Worst-Case Scenarios ####
 
+set.seed(123)
+
 
 # ~ calcularte scenarios ####
-
-set.seed(123)
 
 # Define severity of worst-case events
 worst_yield_drop <- function() runif(1, min = 0.4, max = 0.6)  # 40-60% yield reduction
 worst_price_drop <- function() runif(1, min = 0.3, max = 0.5)  # 30-50% price drop
 worst_cost_increase <- function() runif(1, min = 0.1, max = 0.2)  # 10-20% cost increase
+
+# Define event probabilities
+worst_case_prob <- 0.1  # 10% chance per year
+
+
+# ~ Function ####
 
 # Function to apply worst-case events randomly over 12 years
 apply_worst_case <- function(value_series, event_prob, adjustment_func) {
@@ -1493,31 +1436,67 @@ apply_worst_case <- function(value_series, event_prob, adjustment_func) {
   return(value_series)
 }
 
-# Define event probabilities
-worst_case_prob <- 0.1  # 10% chance per year
 
-# Apply to yields, prices, and expenditures
-yield_wheat_worst <- apply_worst_case(yield_wheat_trend, worst_case_prob, worst_yield_drop)
-price_wheat_worst <- apply_worst_case(price_wheat_trend, worst_case_prob, worst_price_drop)
-expen_wheat_worst <- apply_worst_case(expen_wheat_trend, worst_case_prob, worst_cost_increase)
 
+
+
+# ~ Apply to yields, prices, and expenditures ####
+
+# Conventional
+
+yield_wheat_worst_con <- apply_worst_case(yield_wheat_trend_con, worst_case_prob, worst_yield_drop)
+price_wheat_worst_con <- apply_worst_case(price_wheat_trend, worst_case_prob, worst_price_drop)
+expen_wheat_worst_con <- apply_worst_case(expen_wheat_trend_con, worst_case_prob, worst_cost_increase)
+
+
+# Conservation 
+
+yield_wheat_worst_ca <- apply_worst_case(yield_wheat_trend_ca, worst_case_prob, worst_yield_drop)
+price_wheat_worst_ca <- apply_worst_case(price_wheat_trend, worst_case_prob, worst_price_drop)
+expen_wheat_worst_ca <- apply_worst_case(expen_wheat_trend_ca, worst_case_prob, worst_cost_increase)
+
+
+
+
+# ~ combine the df's ####
+
+# Combine normal vs. worst-case revenue trends
+data_worst_case_con <- 
+  data.frame(
+  Year = rep(1:12, 2),
+  Revenue = c(yield_wheat_trend_con * price_wheat_trend, yield_wheat_worst_con * price_wheat_worst_con),
+  Scenario = rep(c("Normal", "Worst-Case"), each = 12)
+)
+
+data_worst_case_ca <- 
+  data.frame(
+    Year = rep(1:12, 2),
+    Revenue = c(yield_wheat_trend_ca * price_wheat_trend, yield_wheat_worst_ca * price_wheat_worst_ca),
+    Scenario = rep(c("Normal", "Worst-Case"), each = 12)
+  )
+
+
+# Combine both datasets
+worst_case_sim_all <- rbind(
+  data.frame(data_worst_case_con, System = "Conventional"),
+  data.frame(data_worst_case_ca, System = "Conservation")
+)
 
 
 
 # ~ plot the scenarios ####
 
-# Combine normal vs. worst-case revenue trends
-data_worst_case <- data.frame(
-  Year = rep(1:12, 2),
-  Revenue = c(yield_wheat_trend * price_wheat_trend, yield_wheat_worst * price_wheat_worst),
-  Scenario = rep(c("Normal", "Worst-Case"), each = 12)
-)
 
-ggplot(data_worst_case, aes(x = Year, y = Revenue, color = Scenario)) +
+ggplot(data = worst_case_sim_all, 
+       aes(x = Year, 
+           y = Revenue, 
+           color = System, linetype = Scenario)) +
   geom_line(size = 1.2) +
   labs(title = "Revenue Trends Under Normal vs. Worst-Case Scenarios",
        y = "Revenue (£/ha)", x = "Year") +
   theme_minimal()
+
+
 
 
 
@@ -1531,6 +1510,8 @@ ggplot(data_worst_case, aes(x = Year, y = Revenue, color = Scenario)) +
 
 
 # ~ Simulating Profitability Trends ####
+print(gross_margin_conventional)
+print(gross_margin_conservation)
 
 # Calculate cumulative profits
 cumulative_profit_conventional <- cumsum(gross_margin_conventional)

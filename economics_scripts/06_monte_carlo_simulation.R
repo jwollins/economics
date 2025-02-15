@@ -121,8 +121,8 @@ yield_corr_plot <-
        subtitle = "All crops") +
    ylim(-1,2.5) +
   annotate("text", 
-           x = max(global_CA_dat_wwheat$Years.since.NT.started..yrs., na.rm = TRUE) * 0.7, 
-           y = max(global_CA_dat_wwheat$Relative.yield.change, na.rm = TRUE) * 0.9, 
+           x = 40, 
+           y = 1.5, 
            label = paste0("italic(r) == ", round(correlation, 2)), 
            size = 5, color = "red", 
            parse = TRUE) +

@@ -16,7 +16,12 @@ source(file = "economics_scripts/01_packages.R")
 # Load necessary libraries
 library(mc2d)      # For Monte Carlo simulation
 library(janitor)
+
+library(ppcor) # for Partial Correlation
+
 library(dplyr)
+
+library(ggridges)
 
 # install.packages("tidyverse")
 # library(tidyverse)
@@ -53,22 +58,47 @@ summary_df <- dat %>%
   summarise(across(where(is.numeric), mean, na.rm = TRUE), .groups = "drop") %>%
   pivot_longer(-c(treatment, crop.x), names_to = "variable", values_to = "mean_value")
 
+glimpse(summary_df)
 
 # Extract baseline (Conventional) values for each crop
 baseline <- summary_df %>%
   filter(treatment == "Conventional") %>%
   rename(baseline_value = mean_value) %>%
-  select(crop.x, variable, baseline_value)
+  dplyr::select(crop.x, variable, baseline_value)
 
 # Join and compute % difference by crop
 percentage_diff <- summary_df %>%
   left_join(baseline, by = c("crop.x", "variable")) %>%
   mutate(percent_diff = (mean_value - baseline_value) / baseline_value * 100) %>%
   filter(treatment != "Conventional") %>%  # Remove Conventional rows
-  select(treatment, crop.x, variable, percent_diff)
+  dplyr::select(treatment, crop.x, variable, percent_diff)
 
 # View result
 print(percentage_diff)
+
+
+
+
+
+# Group by both treatment and crop.x, then calculate the mean of yield_t_ha
+yield_mean <- summary_df %>%
+  filter(variable == "yield_t_ha") %>%
+  group_by(treatment, crop.x) %>%
+  summarize(mean_yield = mean(mean_value))
+
+# Pivot data into wide format to calculate percentage difference by crop.x
+yield_wide <- yield_mean %>%
+  spread(key = treatment, value = mean_yield)
+
+# Calculate the percentage difference for each crop
+yield_wide <- yield_wide %>%
+  mutate(percentage_diff = (Conservation - Conventional) / Conventional * 100)
+
+# View the result
+yield_wide
+
+
+
 
 
 
@@ -99,12 +129,50 @@ uk_dat <- global_dat %>% filter(Site.country %in% "UK")
 
 
 
-global_CA_dat <- filter(.data = global_dat, Crop.rotation.with.at.least.3.crops.involved.in.NT == "Yes" &
+global_CA_dat <- filter(.data = global_dat, 
+                        Crop.rotation.with.at.least.3.crops.involved.in.NT == "Yes" &
                           global_dat$Soil.cover.in.NT == "Yes")
+
+glimpse(global_CA_dat)
 
 
 unique(global_CA_dat$Crop)
-names(global_CA_dat)
+
+unique(global_CA_dat$Site.country)
+
+# Load required packages
+library(ggplot2)
+library(maps)
+
+# Assuming global_CA_dat is your data
+# Plot the map
+world_map <- map_data("world")
+
+ggplot() +
+  # Plot the world map
+  geom_map(data = world_map, 
+           map = world_map, 
+           aes(x = long,
+               y = lat, 
+               map_id = region), 
+           fill = "lightgray", 
+           color = "white", 
+           size = 0.1) +
+  # Add points for Latitude and Longitude
+  geom_point(data = global_CA_dat, 
+             aes(x = Longitude, 
+                 y = Latitude), 
+             color = "blue", 
+             size = 1.5) +
+  # Labels and title
+  theme_minimal() +
+  labs(x = "Longitude", 
+       y = "Latitude")
+
+ggsave(filename = "plots/simulation_plots/fig_ca_data_world_map.png", width = 8, height = 4)
+
+
+
 
 
 ## ~~ yield trends ####
@@ -119,12 +187,13 @@ print(correlation)  # Check if it's a valid numeric value
 
 
 yield_corr_plot <-
-  ggplot(global_CA_dat, aes(x = Years.since.NT.started..yrs., y = Relative.yield.change)) +
+  ggplot(data = global_CA_dat, 
+         aes(x = Years.since.NT.started..yrs., 
+             y = Relative.yield.change)) +
   geom_point() +
   geom_smooth(method = "lm", se = TRUE, color = "blue") +
   labs(x = "Years since CA started (yrs)", 
-       y = "Relative Yield Change", 
-       subtitle = "All crops") +
+       y = "Relative Yield Change") +
    ylim(-1,2.5) +
   annotate("text", 
            x = 40, 
@@ -150,51 +219,52 @@ ca_start_yield_reduction <- coef(lm_model)[1]  # Extract intercept
 ca_yield_change_rate <- coef(lm_model)[2]      # Extract slope
 
 
+print(ca_start_yield_reduction)
 
 
 
-
-## ~~ winter wheat trends ####
-
-unique(global_CA_dat$Crop)
-
-global_CA_dat_wwheat <- filter(.data = global_CA_dat, Crop == "wheat.winter")
-
-correlation <- cor(global_CA_dat_wwheat$Years.since.NT.started..yrs., 
-                   global_CA_dat_wwheat$Relative.yield.change, 
-                   use = "complete.obs")
-
-print(correlation)  # Check if it's a valid numeric value
-
-
-wwheat_yield_corr_plot <-
-ggplot(global_CA_dat_wwheat, aes(x = Years.since.NT.started..yrs., y = Relative.yield.change)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = TRUE, color = "blue") +
-  labs(x = "Years since CA started (yrs)", 
-       y = "Relative Yield Change", 
-       subtitle = "Winter Wheat") +
-  annotate("text", 
-           x = max(global_CA_dat_wwheat$Years.since.NT.started..yrs., na.rm = TRUE) * 0.7, 
-           y = max(global_CA_dat_wwheat$Relative.yield.change, na.rm = TRUE) * 0.9, 
-           label = paste0("italic(r) == ", round(correlation, 2)), 
-           size = 5, color = "red", 
-           parse = TRUE) +
-  theme_minimal()
-
-wwheat_yield_corr_plot
-
-# dir.create(path = "plots/simulation_plots/")
+# ## ~~ winter wheat trends ####
 # 
-# ggsave(filename = "plots/simulation_plots/rel_yield_change_wwheat.png", width = 8, height = 4)
-
-
-# get the rate of change per year 
-
-lm_model <- lm(Relative.yield.change ~ Years.since.NT.started..yrs., data = global_CA_dat_wwheat)
-summary(lm_model)
-
-# start_yield_reduction <- coef(lm_model)[1]  # Extract intercept
+# unique(global_CA_dat$Crop)
+# 
+# global_CA_dat_wwheat <- filter(.data = global_CA_dat, 
+#                                Crop == "wheat.winter")
+# 
+# correlation <- cor(global_CA_dat_wwheat$Years.since.NT.started..yrs., 
+#                    global_CA_dat_wwheat$Relative.yield.change, 
+#                    use = "complete.obs")
+# 
+# print(correlation)  # Check if it's a valid numeric value
+# 
+# 
+# wwheat_yield_corr_plot <-
+# ggplot(global_CA_dat_wwheat, aes(x = Years.since.NT.started..yrs., y = Relative.yield.change)) +
+#   geom_point() +
+#   geom_smooth(method = "lm", se = TRUE, color = "blue") +
+#   labs(x = "Years since CA started (yrs)", 
+#        y = "Relative Yield Change", 
+#        subtitle = "Winter Wheat") +
+#   annotate("text", 
+#            x = max(global_CA_dat_wwheat$Years.since.NT.started..yrs., na.rm = TRUE) * 0.7, 
+#            y = max(global_CA_dat_wwheat$Relative.yield.change, na.rm = TRUE) * 0.9, 
+#            label = paste0("italic(r) == ", round(correlation, 2)), 
+#            size = 5, color = "red", 
+#            parse = TRUE) +
+#   theme_minimal()
+# 
+# wwheat_yield_corr_plot
+# 
+# # dir.create(path = "plots/simulation_plots/")
+# # 
+# # ggsave(filename = "plots/simulation_plots/rel_yield_change_wwheat.png", width = 8, height = 4)
+# 
+# 
+# # get the rate of change per year 
+# 
+# lm_model <- lm(Relative.yield.change ~ Years.since.NT.started..yrs., data = global_CA_dat_wwheat)
+# summary(lm_model)
+# 
+# # start_yield_reduction <- coef(lm_model)[1]  # Extract intercept
 
 
 
@@ -226,11 +296,11 @@ ahdb_dat <- read_excel(path = "data/processed_data/ahdb_mean_yields_2017_21.xlsx
 # Subtract the values in the top_25_pc row from the values in the bottom_25_pc row
 yield_sd <- ahdb_dat %>%
   filter(mean_yield_2017_2021 == "top_25_pc") %>%
-  select(-mean_yield_2017_2021) %>%
+  dplyr::select(-mean_yield_2017_2021) %>%
   unlist() - 
   ahdb_dat %>%
   filter(mean_yield_2017_2021 == "bottom_25_pc") %>%
-  select(-mean_yield_2017_2021) %>%
+  dplyr::select(-mean_yield_2017_2021) %>%
   unlist()
 
 # Add the new row to the original dataset
@@ -308,37 +378,37 @@ historic_peas_sd <- 15
 
 # ~ Histograms ####
 
-selected_columns <- dat[, c(6:ncol(dat))]
-
-# Replace all zeros with NA in the entire dataframe
-# dat[dat == 0] <- NA
-
-# Function to plot histogram and QQ plot for a single variable
-plot_histogram <- function(var) {
-  p1 <- ggplot(dat, aes_string(x = var)) +
-    geom_histogram(bins = 30, fill = "blue", color = "black", alpha = 0.7) +
-    theme_minimal() +
-    labs(title = var, x = var, y = "Frequency")
-  
-  # p2 <- ggqqplot(dat_y1[[var]], title = paste("QQ Plot of", var)) +
-  #   theme_minimal()
-  
-  return(list(p1))
-}
-
-# Apply function to all selected variables and store the plots
-plots <- lapply(names(selected_columns), plot_histogram)
-
-# Flatten the list of plots into a single list
-combined_plots <- do.call(c, plots)
-
-# Arrange all the plots in a grid layout
-ggarrange(plotlist = combined_plots, ncol = 3, nrow = 3)
-
-# dir.create(path = "plots/distributions/")
+# selected_columns <- dat[, c(6:ncol(dat))]
 # 
-# ggsave(filename = "plots/distributions/economic_histograms.png")
-
+# # Replace all zeros with NA in the entire dataframe
+# # dat[dat == 0] <- NA
+# 
+# # Function to plot histogram and QQ plot for a single variable
+# plot_histogram <- function(var) {
+#   p1 <- ggplot(dat, aes_string(x = var)) +
+#     geom_histogram(bins = 30, fill = "blue", color = "black", alpha = 0.7) +
+#     theme_minimal() +
+#     labs(title = var, x = var, y = "Frequency")
+#   
+#   # p2 <- ggqqplot(dat_y1[[var]], title = paste("QQ Plot of", var)) +
+#   #   theme_minimal()
+#   
+#   return(list(p1))
+# }
+# 
+# # Apply function to all selected variables and store the plots
+# plots <- lapply(names(selected_columns), plot_histogram)
+# 
+# # Flatten the list of plots into a single list
+# combined_plots <- do.call(c, plots)
+# 
+# # Arrange all the plots in a grid layout
+# ggarrange(plotlist = combined_plots, ncol = 3, nrow = 3)
+# 
+# # dir.create(path = "plots/distributions/")
+# # 
+# # ggsave(filename = "plots/distributions/economic_histograms.png")
+# 
 
 
 
@@ -394,13 +464,13 @@ rotation_conservation <- c("Winter Beans", "Winter Wheat", "Spring Barley",
                            "Oilseed Rape", "Feed Peas", "Winter Wheat")
 
 # Repeat rotations to match a 12-year period
-rotation_conventional_full <- rep(rotation_conventional, length.out = 12)
-rotation_conservation_full <- rep(rotation_conservation, length.out = 12)
+rotation_conventional_full <- rep(rotation_conventional, length.out = 6)
+rotation_conservation_full <- rep(rotation_conservation, length.out = 6)
 
 
 # Randomly assign starting positions in the 12-year rotation
-start_years_conventional <- sample(1:12, n_sim, replace = TRUE)
-start_years_conservation <- sample(1:12, n_sim, replace = TRUE)
+start_years_conventional <- sample(1:6, n_sim, replace = TRUE)
+start_years_conservation <- sample(1:6, n_sim, replace = TRUE)
 
 # Select crops based on the random starting position
 crop_sequence_conventional <- rotation_conventional_full[start_years_conventional]
@@ -542,19 +612,22 @@ simulate_yield_trend_con <- function(initial_yield,
   # Create a dataframe with simulations
   sim_data <- expand.grid(Year = 1:years, run = 1:n_sim) %>%
     mutate(Yield = NA)
-
+  
   # Simulate for each run
   for (i in 1:n_sim) {
     yield_series <- numeric(years)
-    yield_series[1] <- initial_yield
-
+    
+    # Add variability to the first-year yield
+    yield_series[1] <- initial_yield * (1 + rnorm(1, mean = 0, sd = volatility))  
+    
+    # Simulate subsequent years
     for (t in 2:years) {
       yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
     }
-
+    
     sim_data$Yield[sim_data$run == i] <- yield_series
   }
-
+  
   return(sim_data)
 }
 
@@ -570,21 +643,25 @@ simulate_yield_trend_ca <- function(initial_yield,
   # Create a dataframe with simulations
   sim_data <- expand.grid(Year = 1:years, run = 1:n_sim) %>%
     mutate(Yield = NA)
-
+  
   # Simulate for each run
   for (i in 1:n_sim) {
     yield_series <- numeric(years)
-    yield_series[1] <- initial_yield
-
+    
+    # Add variability to the first-year yield
+    yield_series[1] <- initial_yield * (1 + rnorm(1, mean = 0, sd = volatility))  
+    
+    # Simulate subsequent years
     for (t in 2:years) {
       yield_series[t] <- yield_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
     }
-
+    
     sim_data$Yield[sim_data$run == i] <- yield_series
   }
-
+  
   return(sim_data)
 }
+
 
 
 
@@ -599,7 +676,6 @@ yield_drift_ca <- ca_yield_change_rate
 
 # Define yield variability (random shocks per year)
 yield_volatility <- 0.03  
-
 
 
 
@@ -718,6 +794,7 @@ yield_sim_ca <- bind_rows(yield_wheat_trend_ca,
 glimpse(yield_sim_ca)
 
 
+
 # combine both 
 
 yield_sim_all <- rbind(
@@ -729,18 +806,34 @@ glimpse(yield_sim_all)
 
 
 
+
+
+
 # add this to the main df
 sim_all <- yield_sim_all
 
 
 
-# # Combine both datasets
-# yield_sim_summary_all <- rbind(
-#   data.frame(yield_summary_con, System = "Conventional"),
-#   data.frame(yield_summary_ca, System = "Conservation")
-# )
-# 
-# names(yield_sim_summary_all)
+# add a column for the plotting crop names 
+
+sim_all$Crop_Name <- sim_all$Crop
+
+sim_all$Crop_Name <- if_else(
+  condition = sim_all$Crop == "Winter Wheat 1" | sim_all$Crop == "Winter Wheat 2", 
+  true = "Winter Wheat", false = sim_all$Crop_Name)
+
+sim_all$Crop_Name <- if_else(
+  condition = sim_all$Crop == "Oilseed Rape 1" | sim_all$Crop == "Oilseed Rape 2", 
+  true = "Oilseed Rape", false = sim_all$Crop_Name)
+
+sim_all$Crop_Name <- if_else(
+  condition = sim_all$Crop == "Winter Barley 1" | sim_all$Crop == "Winter Barley 2", 
+  true = "Winter Barley", false = sim_all$Crop_Name)
+
+unique(sim_all$Crop_Name)
+
+
+
 
 
 
@@ -801,32 +894,19 @@ print(summary_table)
 
 # Create the plot using facets instead of separate plots
 
-  # ggplot(data = yield_sim_all, 
-  #        aes(x = Year, 
-  #            y = Yield, 
-  #            color = Crop)) +
-  # geom_line(size = 1.2) +
-  #   geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = Crop), alpha = 0.2) +
-  #   labs(title = "Simulated Yield Trends",
-  #        x = "Year",
-  #        y = "Yield (t/ha)") +
-  # theme_minimal() +
-  # facet_wrap(~ System, 
-  #            ncol = 2) +  # Facet by system
-  # theme(legend.position = "bottom", 
-  #       strip.text = element_text(size = 15, hjust = 0))
-
-
-
 fig_yield_nsim_plot <-
 ggplot(sim_all, 
        aes(x = Year, 
            y = Yield, 
            group = interaction(Crop, as.factor(run)))) +
-  geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
+  geom_line(alpha = 0.05, 
+            aes(color = Crop_Name), 
+            linewidth = 0.5) +
   labs(
        x = "Year",
-       y = "Yield (t/ha)") +
+       y = expression("Yield (t ha"^{-1}~")"), 
+       color = "Crop"  # Change legend title here
+       ) +
   facet_wrap(~ System, 
              ncol = 2) +
   theme_bw() + 
@@ -837,86 +917,61 @@ ggplot(sim_all,
                                     face = "bold.italic"))
 
  fig_yield_nsim_plot
-# 
+
+
 # ggsave(plot = fig_yield_nsim_plot,
-#        filename = "plots/simulation_plots/fig_yield_nsim_plot.png", 
-#        width = 10, 
+#        filename = "plots/simulation_plots/fig_yield_nsim_plot.png",
+#        width = 10,
 #        height = 5)
 
+ 
 
-# fig_yield_hist_nsim_plot <-
-# ggplot(yield_sim_all, 
-#        aes(x = Yield, 
-#            fill = Crop)) +
-#   geom_histogram(bins = 30, 
-#                  alpha = 0.7) +
-#   facet_wrap(~ System) +
-#   labs( x = "Yield (t/ha)", y = "Frequency") +
-#   theme_bw() + 
-#   theme(legend.position = "bottom",
-#         strip.text.x = element_text(size = 12, 
-#                                     # color = "black", 
-#                                     face = "bold.italic"))
-# 
-# fig_yield_hist_nsim_plot
-# 
+
+fig_yield_hist_nsim_plot <-
+ggplot(sim_all,
+       aes(x = Yield,
+           fill = Crop_Name)) +
+  geom_histogram(bins = 30,
+                 alpha = 0.7) +
+  facet_wrap(~ System) +
+  labs( x = expression("Yield (t ha"^{-1}~")"), 
+        y = "Frequency",
+        fill = "Crop"  # Change legend title here
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom", 
+        strip.text.x = element_text(size = 12,
+                                    # color = "black",
+                                    face = "bold.italic"))
+
+fig_yield_hist_nsim_plot
+
 # ggsave(plot = fig_yield_hist_nsim_plot,
-#        filename = "plots/simulation_plots/fig_yield_hist_nsim_plot.png", 
+#        filename = "plots/simulation_plots/fig_yield_hist_nsim_plot.png",
 #        width = 10, height = 5)
 
 
-# fig_joint_yield_sim <-
-# ggarrange(fig_yield_nsim_plot, 
-#           fig_yield_hist_nsim_plot, 
-#           ncol = 1, 
-#           nrow = 2, common.legend = TRUE, legend = "bottom")
-# 
-# ggsave(plot = fig_joint_yield_sim,
-#        filename = "plots/simulation_plots/fig_joint_yield_nsim_plot.png", 
-#        width = 10, height = 8)
-# 
-# fig_joint_yield_sim
+fig_joint_yield_sim <-
+ggarrange(fig_yield_nsim_plot,
+          fig_yield_hist_nsim_plot,
+          ncol = 1,
+          nrow = 2, 
+          common.legend = TRUE, 
+          legend = "bottom", 
+          align = "hv", labels = c("A","B"))
+
+fig_joint_yield_sim
+ 
+ggsave(plot = fig_joint_yield_sim,
+       filename = "plots/simulation_plots/fig_joint_yield_nsim_plot.png",
+       width = 8, height = 6)
 
 
-ggplot(data = sim_all, 
-       aes(x = System, 
-           y = Yield, 
-           fill = System)) +
-  geom_violin(alpha = 0.4, color = NA) +  # Transparent violin for density
-  geom_boxplot(width = 0.2, outlier.alpha = 0.2) +  # Compact box plot overlay
-  theme_minimal() +
-  labs(title = "Simulated Revenue Distribution by Crop and System",
-       x = "Crop",
-       y = "yield") +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        legend.position = "bottom") 
-
-# hist_plot <-
-# ggplot(data = sim_all, 
-#        aes(x = System, 
-#            y = Yield, 
-#            fill = System)) +
-#   geom_violin(alpha = 0.4, color = NA) +  # Transparent violin for density
-#   geom_boxplot(width = 0.2, outlier.alpha = 0.2) +  # Compact box plot overlay
-#   theme_bw() + 
-#   labs(title = "Simulated Yield Distribution by Crop and System",
-#        x = "System",
-#        y = "Yield (t/ha)") +
-#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-#         legend.position = "bottom",
-#         strip.text.x = element_text(size = 12, face = "bold.italic")) 
 
 
-# fig_joint_yield_sim <-
-# ggarrange(fig_yield_nsim_plot,
-#           hist_plot,
-#           ncol = 1,
-#           nrow = 2, common.legend = TRUE, legend = "bottom")
-# 
-# 
-# fig_joint_yield_sim
+
+
+
 
 
 
@@ -950,7 +1005,7 @@ simulate_price_trend <- function(initial_price,
   # Simulate for each run
   for (i in 1:n_sim) {
     price_series <- numeric(years)
-    price_series[1] <- initial_price
+    price_series[1] <- initial_price * (1 + rnorm(1, mean = 0, sd = volatility))
     
     for (t in 2:years) {
       price_series[t] <- price_series[t-1] * (1 + drift + rnorm(1, mean = 0, sd = volatility))
@@ -1133,6 +1188,30 @@ sim_all$Revenue <- sim_all$Yield * sim_all$Price
 
 
 
+
+# add a column for the plotting crop names 
+
+sim_all$Crop_Name <- sim_all$Crop
+
+sim_all$Crop_Name <- if_else(
+  condition = sim_all$Crop == "Winter Wheat 1" | sim_all$Crop == "Winter Wheat 2", 
+  true = "Winter Wheat", false = sim_all$Crop_Name)
+
+sim_all$Crop_Name <- if_else(
+  condition = sim_all$Crop == "Oilseed Rape 1" | sim_all$Crop == "Oilseed Rape 2", 
+  true = "Oilseed Rape", false = sim_all$Crop_Name)
+
+sim_all$Crop_Name <- if_else(
+  condition = sim_all$Crop == "Winter Barley 1" | sim_all$Crop == "Winter Barley 2", 
+  true = "Winter Barley", false = sim_all$Crop_Name)
+
+unique(sim_all$Crop_Name)
+
+
+
+
+
+
 # ~ Price Plots ####
 
 fig_price_nsim_plot <-
@@ -1140,10 +1219,13 @@ ggplot(sim_all,
        aes(x = Year, 
            y = Price, 
            group = interaction(Crop, as.factor(run)))) +
-  geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
+  geom_line(alpha = 0.05, 
+            aes(color = Crop_Name), 
+            linewidth = 0.5) +
   labs(
     x = "Year",
-    y = "Price (£/t)") +
+    y = expression("Price (£ t"^{-1}~")"), 
+    color = "Crop") +
   facet_wrap(~ System,
              ncol = 2) +
   theme_bw() + 
@@ -1164,56 +1246,62 @@ fig_price_nsim_plot
 
 
 
-# Ridgeline plot → Best for showing price distributions across years.
-
-library(ggridges)
-
-fig_price_ridge_plot <-
-ggplot(sim_all, 
-       aes(x = Price, 
-           y = as.factor(Year), 
-           fill = System)) +
-  geom_density_ridges(alpha = 0.6) +
-  labs(x = "Price (£/t)", 
-       y = "Year") +
-  facet_wrap(~ System, ncol = 2) +
+fig_price_hist_nsim_plot <-
+  ggplot(sim_all,
+         aes(x = Price,
+             fill = Crop_Name)) +
+  geom_histogram(bins = 30,
+                 alpha = 0.7) +
+  facet_wrap(~ System) +
+  labs( x = expression("Price (£ t"^{-1}~")"), 
+        y = "Frequency",
+        fill = "Crop"  # Change legend title here
+  ) +
   theme_bw() +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  theme(legend.position = "bottom",
-        strip.text.x = element_text(size = 12, face = "bold.italic"))
+  theme(legend.position = "bottom", 
+        strip.text.x = element_text(size = 12,
+                                    # color = "black",
+                                    face = "bold.italic"))
 
+fig_price_hist_nsim_plot
 
-fig_price_ridge_plot
-
+# ggsave(plot = fig_yield_hist_nsim_plot,
+#        filename = "plots/simulation_plots/fig_yield_hist_nsim_plot.png",
+#        width = 10, height = 5)
 
 
 fig_joint_price_sim <-
-  ggarrange(fig_price_nsim_plot, 
-            fig_price_ridge_plot, 
-            ncol = 1, 
-            nrow = 2, common.legend = TRUE, legend = "bottom")
+  ggarrange(fig_price_nsim_plot,
+            fig_price_hist_nsim_plot,
+            ncol = 1,
+            nrow = 2, 
+            common.legend = TRUE, 
+            legend = "bottom", 
+            align = "hv", 
+            labels = c("A","B"))
 
-# fig_joint_price_sim
+fig_joint_price_sim
 
-# ggsave(plot = fig_joint_price_sim,
-#        filename = "plots/simulation_plots/fig_joint_price_nsim_plot.png", 
-#        width = 10, height = 4)
+ggsave(plot = fig_joint_price_sim,
+       filename = "plots/simulation_plots/fig_joint_price_nsim_plot.png",
+       width = 8, height = 6)
 
 
 
-ggplot(data = sim_all, 
-       aes(x = System, 
-           y = Price, 
-           fill = System)) +
-  geom_violin(alpha = 0.4, color = NA) +  # Transparent violin for density
-  geom_boxplot(width = 0.2, outlier.alpha = 0.2) +  # Compact box plot overlay
-  theme_minimal() +
-  labs(title = "Simulated price Distribution by System",
-       x = "Crop",
-       y = "Price (£/t)") +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        legend.position = "bottom") 
+
+# ggplot(data = sim_all, 
+#        aes(x = System, 
+#            y = Price, 
+#            fill = System)) +
+#   geom_violin(alpha = 0.4, color = NA) +  # Transparent violin for density
+#   geom_boxplot(width = 0.2, outlier.alpha = 0.2) +  # Compact box plot overlay
+#   theme_minimal() +
+#   labs(title = "Simulated price Distribution by System",
+#        x = "Crop",
+#        y = "Price (£/t)") +
+#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+#         legend.position = "bottom") 
 
 
 
@@ -1228,7 +1316,9 @@ fig_revenue_nsim_plot <-
          aes(x = Year, 
              y = Revenue, 
              group = interaction(Crop, as.factor(run)))) +
-  geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
+  geom_line(alpha = 0.05, 
+            aes(color = Crop_Name), 
+            size = 0.5) +
   labs(
     x = "Year",
     y = "Revenue (£/ha)") +
@@ -1246,20 +1336,8 @@ fig_revenue_nsim_plot
 
 
 
-ggplot(data = sim_all, 
-       aes(x = Revenue, 
-           y = as.factor(Year),  # Convert Year to categorical for ridgelines
-           fill = System)) +
-  geom_density_ridges(alpha = 0.6, scale = 1.2) +
-  facet_wrap(~ System, ncol = 2) + 
-  theme_minimal() +
-  labs(
-    x = "Revenue (£/ha)",
-    y = "Year",
-    title = "Revenue Distribution Over Time by System") +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  theme(legend.position = "bottom",
-        strip.text.x = element_text(size = 12, face = "bold.italic"))
+
+
 
 
 
@@ -1281,25 +1359,7 @@ fig_revenue_box_plot <-
 fig_revenue_box_plot
 
 
-# 
-# ggsave(plot = fig_revenue_box_plot, filename = "plots/simulation_plots/price.png")
 
-
-# fig_joint_revenue_sim <-
-#   ggarrange(fig_revenue_nsim_plot, 
-#             fig_revenue_box_plot, 
-#             ncol = 2, 
-#             nrow = 1, 
-#             common.legend = FALSE, 
-#             legend = "bottom", 
-#             align = "hv", axis = "tblr")
-
-# fig_joint_revenue_sim
-# 
-# ggsave(plot = fig_joint_revenue_sim, 
-#        filename = "plots/simulation_plots/fig_joint_revenue_sim.png", 
-#        width = 10,
-#        height = 4)
 
 
 
@@ -1363,7 +1423,7 @@ simulate_expenditure_trend <- function(initial_expenditure,
   # Simulate for each run
   for (i in 1:n_sim) {
     expenditure_series <- numeric(years)
-    expenditure_series[1] <- initial_expenditure
+    expenditure_series[1] <- initial_expenditure * (1 + rnorm(1, mean = 0, sd = volatility))
     
     for (t in 2:years) {
       # Expenditure grows with inflation and is adjusted by volatility
@@ -1612,31 +1672,124 @@ fig_expenditure_box_plot <-
  
 sim_all$Gross_Margin <- sim_all$Revenue - sim_all$Expenditure
 
- glimpse(sim_all)
+glimpse(sim_all)
+
+
+# ~ Calculate cumulative GM ####
+
+# # Ensure cumulative gross margin is correctly calculated
+# sim_all_cumulative <- sim_all %>%
+#   group_by(run, System, Year) %>%  # Aggregate Gross_Margin per Year within each run
+#   summarise(Yearly_GM = sum(Gross_Margin, na.rm = TRUE), .groups = "drop") %>%  
+#   arrange(run, System, Year) %>%  # Ensure proper ordering
+#   group_by(run, System) %>%  
+#   mutate(Cumulative_Gross_Margin = cumsum(Yearly_GM)) %>%  # Compute cumulative sum
+#   ungroup() 
+# 
+# 
+# # Compute cumulative gross margin statistics
+# sim_all_cumulative_summary <- sim_all %>%
+#   group_by(run, System, Year) %>%  
+#   summarise(Yearly_GM = sum(Gross_Margin, na.rm = TRUE), .groups = "drop") %>%  
+#   arrange(run, System, Year) %>%  
+#   group_by(run, System) %>%  
+#   mutate(Cumulative_Gross_Margin = cumsum(Yearly_GM)) %>%  
+#   ungroup() %>%
+#   
+#   # Compute summary statistics
+#   group_by(System, Year) %>%
+#   summarise(
+#     mean_CGM = mean(Cumulative_Gross_Margin, na.rm = TRUE),
+#     lower_CGM = quantile(Cumulative_Gross_Margin, 0.05, na.rm = TRUE),  # 5th percentile
+#     upper_CGM = quantile(Cumulative_Gross_Margin, 0.95, na.rm = TRUE),  # 95th percentile
+#     sd_CGM = sd(Cumulative_Gross_Margin, na.rm = TRUE),  
+#     .groups = "drop"
+#   )
+
+
+
+# Compute cumulative gross margin for each run
+sim_all_cumulative <- sim_all %>%
+  group_by(run, System, Year) %>%  
+  summarise(Yearly_GM = sum(Gross_Margin, na.rm = TRUE), .groups = "drop") %>%  
+  arrange(run, System, Year) %>%  
+  group_by(run, System) %>%  
+  mutate(Cumulative_Gross_Margin = cumsum(Yearly_GM)) %>%  
+  ungroup()
+
+# Compute summary statistics (mean and quantiles)
+sim_all_cumulative_summary <- sim_all_cumulative %>%
+  group_by(System, Year) %>%
+  summarise(
+    mean_CGM = mean(Cumulative_Gross_Margin, na.rm = TRUE),
+    lower_CGM = quantile(Cumulative_Gross_Margin, 0.05, na.rm = TRUE),  # 5th percentile
+    upper_CGM = quantile(Cumulative_Gross_Margin, 0.95, na.rm = TRUE),  # 95th percentile
+    .groups = "drop"
+  )
+
+
+
 
 
 
 # ~ Plots ####
 
-fig_gm_nsim_plot <-
-  ggplot(sim_all, 
-         aes(x = Year, 
-             y = Gross_Margin, 
-             group = interaction(Crop, as.factor(run)))) +
-  geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
+
+
+
+
+# Plot cumulative gross margin with simulations and summary statistics
+fig_gm_cumulative_plot <-
+  ggplot() +
+  
+  # Add individual simulation lines (original data)
+  geom_line(data = sim_all_cumulative, 
+            aes(x = Year, 
+                y = Cumulative_Gross_Margin, 
+                group = as.factor(run), 
+                color = System),
+            alpha = 0.05, 
+            linewidth = 0.5) +
+  
+  # Add uncertainty band (5th–95th percentile)
+  geom_ribbon(data = sim_all_cumulative_summary, 
+              aes(x = Year, 
+                  ymin = lower_CGM, 
+                  ymax = upper_CGM), 
+              alpha = 0, color = "black", 
+              linetype = "dotted") +
+  
+  # Add mean cumulative gross margin line
+  geom_line(data = sim_all_cumulative_summary, 
+            aes(x = Year, 
+                y = mean_CGM, 
+                color = "black"), 
+            linewidth = 1, 
+            linetype = "dashed") +
+  
+  # Custom colors
+  scale_color_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+  
+  # Labels and theme
   labs(
     x = "Year",
-    y = "Gross Margin (£/ha)") +
-  facet_wrap(~ System,
-             ncol = 2) +
+    y = "Cumulative Gross Margin (£/ha)") +
+  facet_wrap(~ System, ncol = 2) +
   theme_bw() + 
-  guides(colour = guide_legend(override.aes = list(alpha = 1, linewidth = 5))) + 
-  theme(legend.position = "bottom",
-        strip.text.x = element_text(size = 12, 
-                                    # color = "black", 
-                                    face = "bold.italic"))
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic"))
 
-fig_gm_nsim_plot
+fig_gm_cumulative_plot
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1746,7 +1899,7 @@ key_columns <- c("Year", "run", "Crop", "System")
 
 sim_all <- sim_all %>%
   left_join(revenue_sim_all_shocked %>% 
-              select(Year, run, Crop, System, Revenue_Shocked, Yield_Shocked, Shock_Factor, Climate_Shock), 
+              dplyr::select(Year, run, Crop, System, Revenue_Shocked, Yield_Shocked, Shock_Factor, Climate_Shock), 
             by = key_columns)
 
 
@@ -1839,7 +1992,7 @@ apply_inflation <- function(data, inflation_rate, volatility_rate) {
   # Apply inflation to the revenue (adjusting by inflation factor)
   data %>%
     mutate(
-      Revenue_Adjusted = Revenue * inflation_factor,  # Apply inflation to shocked revenue
+      Revenue_Adjusted = Revenue_Shocked * inflation_factor,  # Apply inflation to shocked revenue
       Expenditure_Adjusted = Expenditure * inflation_factor,  # Apply inflation to shocked revenue
     )
 }
@@ -1929,6 +2082,10 @@ fig_revenue_inflation_box_plot
 
 
 
+
+
+
+
 ## ~~ GM + inflation ####
 
 
@@ -1990,19 +2147,7 @@ glimpse(sim_all)
 # Summary table ####
 
 
-# summary_table <- sim_all %>%
-#   group_by(System) %>%
-#   summarise(
-#     n = n(),  # Add count of observations
-#     across(where(is.numeric), 
-#            list(mean = mean, 
-#                 sd = sd, 
-#                 min = min, 
-#                 max = max), 
-#            na.rm = TRUE)
-#   )
-# 
-# print(summary_table)
+# ~ Make summary df ####
 
 
 # summarise by treatment system and the run
@@ -2010,18 +2155,98 @@ glimpse(sim_all)
 summary_table <- sim_all %>%
   group_by(System, run) %>%  # Group by System and Run (crop rotation unit)
   summarise(
-    across(where(is.numeric), sum, na.rm = TRUE)  # Sum numeric values over the full rotation
+    across(where(is.numeric), sum, na.rm = TRUE),  # Sum numeric values over the full rotation
+    .groups = "drop"
   ) %>%
   group_by(System) %>%  # Now group by System
   summarise(
-    across(where(is.numeric), 
-           list(mean = mean, sd = sd, min = min, max = max), 
-           na.rm = TRUE)
+    across(where(is.numeric) & !run,  # Exclude `run`
+           list(
+             mean = ~ mean(., na.rm = TRUE), 
+             sd = ~ sd(., na.rm = TRUE),
+             sem = ~ sd(., na.rm = TRUE) / sqrt(sum(!is.na(.))),  # Standard Error of the Mean
+             min = ~ min(., na.rm = TRUE), 
+             max = ~ max(., na.rm = TRUE)
+           )),
+    .groups = "drop"
   )
+
 
 print(summary_table)
 
 names(summary_table)
+
+glimpse(sim_all)
+
+
+# Compute cumulative gross margin for each run
+sim_all_cumulative <- sim_all %>%
+  group_by(run, System, Year) %>%  
+  summarise(Yearly_GM = sum(GM_inflated, na.rm = TRUE), .groups = "drop") %>%  
+  arrange(run, System, Year) %>%  
+  group_by(run, System) %>%  
+  mutate(Cumulative_Gross_Margin = cumsum(Yearly_GM)) %>%  
+  ungroup()
+
+# Compute summary statistics (mean and quantiles)
+sim_all_cumulative_summary <- sim_all_cumulative %>%
+  group_by(System, Year) %>%
+  summarise(
+    mean_CGM = mean(Cumulative_Gross_Margin, na.rm = TRUE),
+    lower_CGM = quantile(Cumulative_Gross_Margin, 0.05, na.rm = TRUE),  # 5th percentile
+    upper_CGM = quantile(Cumulative_Gross_Margin, 0.95, na.rm = TRUE),  # 95th percentile
+    .groups = "drop"
+  )
+
+
+
+# ~ Plots ####
+
+
+# Plot cumulative gross margin with simulations and summary statistics
+fig_gm_cumulative_plot <-
+  ggplot() +
+  
+  # Add individual simulation lines (original data)
+  geom_line(data = sim_all_cumulative, 
+            aes(x = Year, 
+                y = Cumulative_Gross_Margin, 
+                group = as.factor(run), 
+                color = System),
+            alpha = 0.05, 
+            linewidth = 0.5) +
+  
+  # Add uncertainty band (5th–95th percentile)
+  geom_ribbon(data = sim_all_cumulative_summary, 
+              aes(x = Year, 
+                  ymin = lower_CGM, 
+                  ymax = upper_CGM), 
+              alpha = 0, color = "black", 
+              linetype = "dotted") +
+  
+  # Add mean cumulative gross margin line
+  geom_line(data = sim_all_cumulative_summary, 
+            aes(x = Year, 
+                y = mean_CGM, 
+                color = "black"), 
+            linewidth = 1, 
+            linetype = "dashed") +
+  
+  # Custom colors
+  scale_color_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+  
+  # Labels and theme
+  labs(
+    x = "Year",
+    y = "Cumulative Gross Margin (£/ha)") +
+  facet_wrap(~ System, ncol = 2) +
+  theme_bw() + 
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic"))
+
+fig_gm_cumulative_plot
+
+
 
 
 
@@ -2033,22 +2258,23 @@ fig_GM_inflation_bar_plot <-
              fill = System)) +
   geom_bar(stat = "identity", 
            position = "dodge", 
-           alpha = 0.8) +  # Bar plot
-  geom_errorbar(aes(ymin = GM_inflated_mean - GM_inflated_sd,
-                    ymax = GM_inflated_mean + GM_inflated_sd),
+           alpha = 1) +  # Bar plot
+  geom_errorbar(aes(ymin = GM_inflated_mean - GM_inflated_sem,
+                    ymax = GM_inflated_mean + GM_inflated_sem),
                 width = 0.2, 
                 color = "black") +  # Error bars
   theme_minimal() +
   labs(
     x = "Treatment System",
-    y = "Inflation-Adjusted Gross Margin (£/ha)",
-    title = "Mean Gross Margin with SD"
+    y = "Inflation-Adjusted 6-year Gross Margin (£/ha)",
+    title = "Inflation-Adjusted 6-year Mean Gross Margin"
   ) +
   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
   theme(legend.position = "bottom")
 
 print(fig_GM_inflation_bar_plot)
 
+ggsave(filename = "plots/simulation_plots/fig_gm_inflated_plot.png", width = 6, height = 5)
 
 
 
@@ -2060,6 +2286,123 @@ print(fig_GM_inflation_bar_plot)
 
 
 
+# ____________________________####
+# Sesnsitivity analysis ####
+
+
+glimpse(sim_all)
+
+
+# ~ Correlation Analysis (Simple Sensitivity Check) ####
+
+# Correlation analysis between selected input and output variables
+cor_results <- sim_all %>%
+  dplyr::select(Price, Expenditure, Yield_Shocked, Revenue_Adjusted, Gross_Margin) %>%
+  cor(use = "complete.obs")
+
+print(cor_results)
+
+
+
+
+
+
+# ~ Linear Regression Models (Quantifying Relationships) ####
+
+# Linear regression to analyze the relationship between inputs and output
+lm_model <- lm(formula = Gross_Margin ~ Price + Expenditure + Climate_Shock, 
+               data = sim_all)
+summary(lm_model)
+
+
+
+
+# ~ Partial Correlation (Controlling for Other Variables) ####
+
+
+
+# Partial correlation between Price and Yield_Shocked, controlling for Expenditure
+pcor_results <- pcor.test(sim_all$Price, sim_all$Yield_Shocked, sim_all$Expenditure)
+print(pcor_results)
+
+# Partial correlation between Price and Yield_Shocked, controlling for Climate_Shock
+pcor_results <- pcor.test(sim_all$Price, sim_all$Yield_Shocked, sim_all$Climate_Shock)
+print(pcor_results)
+
+
+
+
+
+
+
+# # ~ Variance-Based Sensitivity Analysis (Sensitivity Indices) ####
+# 
+# 
+# library(sensitivity)
+# 
+# # Define the input matrix (you can select specific columns if necessary)
+# inputs_matrix <- as.matrix(select(sim_all, Price, Expenditure, Climate_Shock))
+# 
+# # Define the model as a function (for example, a linear regression or other model)
+# model_function <- function(X) {
+#   # For demonstration, we're just using Gross_Margin as the output directly
+#   return(sim_all$Gross_Margin)
+# }
+# 
+# # Perform Sobol sensitivity analysis
+# sobol_analysis <- sobol(model = model_function, X1 = inputs_matrix, X2 = inputs_matrix)
+# 
+# # Check the sensitivity results
+# print(sobol_analysis)
+
+
+
+
+
+
+
+
+
+# ~ Monte Carlo Simulation Sensitivity ####
+
+
+# Example of running Monte Carlo simulation for sensitivity, grouped by System
+set.seed(123)
+
+# Define a simple function that runs a simulation, with an additional grouping variable (System)
+sensitivity_monte_carlo_grouped <- function(input_variable, output_variable, group_variable) {
+  # Initialize an empty list to store results by group
+  group_results <- list()
+  
+  # Loop through each unique system in the group_variable (e.g., experimental treatment "System")
+  for (system in unique(group_variable)) {
+    # Subset the data for the current group
+    group_data <- which(group_variable == system)
+    input_subset <- input_variable[group_data]
+    output_subset <- output_variable[group_data]
+    
+    # Run the simulation for the current group
+    sim_results <- replicate(1000, {
+      # Adjust input variable randomly (for example, apply random shocks)
+      simulated_input <- input_subset + rnorm(length(input_subset), 0, 1)
+      
+      # Recalculate output variable (in your case, this could be gross margin or yield)
+      simulated_output <- lm(output_subset ~ simulated_input)$fitted.values
+      return(simulated_output)
+    })
+    
+    # Store the simulation results for the current group
+    group_results[[system]] <- sim_results
+  }
+  
+  return(group_results)
+}
+
+# Run the Monte Carlo simulation grouped by "System"
+simulated_results_grouped <- sensitivity_monte_carlo_grouped(sim_all$Price, sim_all$Gross_Margin, sim_all$System)
+
+# Check the results for a specific system (e.g., "Conservation Agriculture")
+simulated_results_conservation <- simulated_results_grouped[["Conservation Agriculture"]]
 
 
 

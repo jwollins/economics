@@ -282,10 +282,123 @@ ggsave(filename = "plots/simulation_plots/rel_yield_change.png", width = 8, heig
 
 
 
+# ~~ Europe data ####
 
 
-
-
+# # Define a vector of European countries
+# european_countries <- c("Italy", "Spain", "Sweden", "UK", "Poland", "Belgium", "Germany", 
+#                         "Croatia", "Switzerland", "France", "Denmark", "Romania", "Hungary", 
+#                         "Czech Republic", "Greece", "Finland", "Norway", "Serbia")
+# 
+# # Filter the data to include only European countries
+# europe_dat <- global_dat %>% filter(Site.country %in% european_countries)
+# 
+# 
+# europe_CA_dat <- filter(.data = europe_dat, 
+#                         Crop.rotation.with.at.least.3.crops.involved.in.NT == "Yes" &
+#                           europe_dat$Soil.cover.in.NT == "Yes")
+# 
+# 
+# 
+# unique(europe_CA_dat$Crop)
+# 
+# correlation <- cor(europe_CA_dat$Years.since.NT.started..yrs., 
+#                    europe_CA_dat$Relative.yield.change, 
+#                    use = "complete.obs")
+# 
+# print(correlation)  # Check if it's a valid numeric value
+# 
+# 
+# 
+# # get the rate of change per year 
+# 
+# glimpse(europe_CA_dat$Relative.yield.change)
+# 
+# lm_model <- lm(Relative.yield.change ~ Years.since.NT.started..yrs., 
+#                data = europe_CA_dat)
+# summary(lm_model)
+# 
+# # ca_start_yield_reduction <- coef(lm_model)[1]  # Extract intercept
+# # ca_yield_change_rate <- coef(lm_model)[2]      # Extract slope
+# 
+# 
+# # Compute summary stats
+# intercept <- coef(lm_model)[1]
+# slope <- coef(lm_model)[2]
+# r_squared <- summary(lm_model)$r.squared
+# mean_yield_change <- mean(europe_CA_dat$Relative.yield.change, na.rm = TRUE)
+# sd_yield_change <- sd(europe_CA_dat$Relative.yield.change, na.rm = TRUE)
+# n_points <- nrow(europe_CA_dat)
+# 
+# 
+# 
+# 
+# 
+# # ~ plot the yield change rate ####
+# 
+# # If intercept is negative, format it as -value
+# intercept_label <- if (intercept < 0) {
+#   paste("-", abs(round(intercept, 4)))
+# } else {
+#   paste("+", round(intercept, 4))
+# }
+# 
+# # Create the equation string dynamically
+# equation_label <- paste0(round(slope, 4), " * italic(x) ", intercept_label)
+# 
+# # Create plot
+# europe_yield_corr_plot <-
+#   ggplot(data = europe_CA_dat, 
+#          aes(x = Years.since.NT.started..yrs., 
+#              y = Relative.yield.change)) +
+#   geom_point(alpha = 0.6) +  # Slight transparency to reduce clutter
+#   geom_smooth(method = "lm", se = TRUE, color = "blue") +
+#   
+#   # # Add mean and standard deviation as a reference
+#   # geom_hline(yintercept = mean_yield_change, linetype = "dashed", color = "black") +
+#   # 
+#   # annotate("rect", xmin = -Inf, xmax = Inf, 
+#   #          ymin = mean_yield_change - sd_yield_change, 
+#   #          ymax = mean_yield_change + sd_yield_change, 
+#   #          fill = "gray", alpha = 0.2) +
+#   
+#   
+#   annotate("text", 
+#            x = 38, 
+#            y = 1.8, 
+#            label = paste0("italic(R^2) == ", round(r_squared, 2)), 
+#            size = 5, color = "black", parse = TRUE) +
+#   
+#   # Correlation coefficient
+#   annotate("text", 
+#            x = 38, 
+#            y = 1.4, 
+#            label = paste0("italic(r) == ", round(correlation, 2)), 
+#            size = 5, color = "black", parse = TRUE) +
+#   
+#   # Sample size
+#   annotate("text", 
+#            x = 38, 
+#            y = 1, 
+#            label = paste0("italic(n) == ", n_points), 
+#            size = 5, color = "black", parse = TRUE) +
+#   
+#   # Labels and theme
+#   labs(x = "Years since CA started (yrs)", 
+#        y = "Relative Yield Change (Conservation / Conventional)") +
+#   ylim(-1, 2.5) +
+#   theme_bw()
+# 
+# europe_yield_corr_plot
+# 
+# 
+# 
+# # dir.create(path = "plots/simulation_plots/")
+# 
+# ggsave(filename = "plots/simulation_plots/rel_yield_change_europe.png", width = 8, height = 4)
+# 
+# 
+# 
 
 
 
@@ -2080,7 +2193,7 @@ fig_gm_box_plot <-
 # Probability of a climate shock in each year (increasing over time)
 climate_shock_prob_con <- seq(0.05, 0.20, length.out = 6)  # 5% in Year 1, 20% in Year 12
 
-climate_shock_prob_ca <- seq(0.04, 0.16, length.out = 6)  # 5% in Year 1, 20% in Year 12
+climate_shock_prob_ca <- seq(0.05, 0.20, length.out = 6)  # 5% in Year 1, 20% in Year 12
 
 # Define severity of yield reduction (10% to 30%)
 climate_shock_severity_con <- function() runif(1, min = 0.1, max = 0.3)  
@@ -2092,6 +2205,8 @@ climate_shock_severity_ca <- function() runif(1, min = 0.05, max = 0.15)
 
 
 # ~ Function ####
+
+glimpse(sim_all)
 
 
 apply_climate_shocks <- function(data, key, shock_prob, shock_severity) {
@@ -2447,7 +2562,9 @@ ggsave(plot = fig_joint_Yield_Shocked_sim,
 # Summary table ####
 
 
-# ~ Make summary df ####
+
+
+# ~ Cumulative summaries ####
 
 glimpse(sim_all)
 
@@ -2482,9 +2599,6 @@ glimpse(sim_all)
 
 
 
-
-
-
 # Compute cumulative gross margin for each run
 
 sim_all_cumulative <- sim_all %>%
@@ -2504,6 +2618,156 @@ sim_all_cumulative_summary <- sim_all_cumulative %>%
     upper_CGM = quantile(Cumulative_Gross_Margin, 0.95, na.rm = TRUE),  # 95th percentile
     .groups = "drop"
   )
+
+
+
+
+
+# ~ Yield summary ####
+
+names(sim_all)
+
+summary_yield <- sim_all %>%
+  group_by(System, Year, Crop_Name) %>%
+  summarise(
+    mean_yield = mean(Yield, na.rm = TRUE),
+    sd_yield = sd(Yield, na.rm = TRUE),  
+    se_yield = sd_yield / sqrt(n()),  
+    lower_yield = quantile(Yield, 0.05, na.rm = TRUE),
+    upper_yield = quantile(Yield, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(System, Crop_Name, Year) %>%  # Ensure correct order before lagging
+  group_by(System, Crop_Name) 
+
+total_pct_increase <- summary_yield %>%
+  group_by(System, Crop_Name) %>%
+  summarise(
+    start_yield = first(mean_yield),  # Yield in Year 1
+    end_yield = last(mean_yield),  # Yield in Year 6
+    total_pct_increase = (end_yield - start_yield) / start_yield * 100,
+    .groups = "drop"
+  )
+
+
+
+# ~ climate-shocked summary ####
+
+names(sim_all)
+
+summary_yield <- 
+  sim_all %>%
+  group_by(System, Year, Crop_Name) %>%
+  summarise(
+    mean_yield = mean(Yield, na.rm = TRUE),
+    sd_yield = sd(Yield, na.rm = TRUE),  
+    se_yield = sd_yield / sqrt(n()),  
+    lower_yield = quantile(Yield, 0.05, na.rm = TRUE),
+    upper_yield = quantile(Yield, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(System, Year) %>%  # Ensure correct order before lagging
+  group_by(System) 
+
+summary_yield_shocked <- 
+  sim_all %>%
+  group_by(System, Year, Crop_Name) %>%
+  summarise(
+    mean_yield = mean(Yield_Shocked, na.rm = TRUE),
+    sd_yield = sd(Yield_Shocked, na.rm = TRUE),  
+    se_yield = sd_yield / sqrt(n()),  
+    lower_yield = quantile(Yield_Shocked, 0.05, na.rm = TRUE),
+    upper_yield = quantile(Yield_Shocked, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(System, Year) %>%  # Ensure correct order before lagging
+  group_by(System) 
+
+glimpse(summary_yield)
+glimpse(summary_yield_shocked)
+
+
+
+# Merge the two summaries by System and Year
+summary_comparison <- merge(
+  x = summary_yield, 
+  y = summary_yield_shocked, 
+  by = c("System", "Year", "Crop_Name"), 
+  suffixes = c("_unchanged", "_shocked"))
+
+# Calculate the yield difference
+summary_comparison$yield_diff <- summary_comparison$mean_yield_unchanged - summary_comparison$mean_yield_shocked
+
+# Calculate the percentage reduction
+summary_comparison$perc_reduction <- (summary_comparison$yield_diff / summary_comparison$mean_yield_unchanged) * 100
+
+# Calculate average reduction per system
+avg_reduction <- summary_comparison %>%
+  group_by(System, Crop_Name) %>%
+  summarise(mean_reduction = mean(yield_diff),
+            avg_perc_reduction = mean(perc_reduction))
+
+
+
+
+# ~ Revenue summary ####
+
+
+names(sim_all)
+
+glimpse(sim_all)
+
+print(mean(sim_all$Revenue_Shocked))
+
+summary_Revenue_Shocked <- sim_all %>%
+  group_by(System, Year, Crop_Name) %>%
+  summarise(
+    mean_revenue = mean(Revenue_Shocked, na.rm = TRUE),
+    sd_revenue = sd(Revenue_Shocked, na.rm = TRUE),  
+    se_revenue = sd_revenue / sqrt(n()),  
+    lower_revenue = quantile(Revenue_Shocked, 0.05, na.rm = TRUE),
+    upper_revenue = quantile(Revenue_Shocked, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(System, Crop_Name, Year) %>%  # Ensure correct order before lagging
+  group_by(System, Crop_Name, Year) 
+
+glimpse(summary_Revenue_Shocked)
+
+total_pct_increase <- summary_Revenue_Shocked %>%
+  group_by(System, Crop_Name) %>%
+  summarise(
+    start_revenue = first(mean_revenue),  # in Year 1
+    end_revenue = last(mean_revenue),  # in Year 6
+    total_pct_increase = (end_revenue - start_revenue) / start_revenue * 100,
+    .groups = "drop"
+  )
+
+
+print(summary_Revenue_Shocked, n = 54)
+
+
+
+
+
+
+
+# ~ GM summary ####
+
+summary_GM <- sim_all %>%
+  group_by(System, Year) %>%
+  summarise(
+    mean_GM = mean(Gross_Margin, na.rm = TRUE),
+    lower_GM = quantile(Gross_Margin, 0.05, na.rm = TRUE),
+    upper_GM = quantile(Gross_Margin, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+loss_probability <- sim_all %>%
+  group_by(System) %>%
+  summarise(probability_loss = mean(Gross_Margin < 0, na.rm = TRUE))
+
+
 
 
 
@@ -2691,223 +2955,219 @@ ggsave(filename = "plots/simulation_plots/fig_rotation_GM_plot.png", width = 9, 
 
 
 
-# ________________________________________####
-#  Monte Carlo Simulation (For probabilistic risk assessment) ####
-
-
-library(triangle)  # For triangular distributions
-
-glimpse(sim_all)
-
-
-# Simulating price variations (triangular distribution)
-sim_all$Price_Shocked <- rtriangle(nrow(sim_all), 
-                                   a = min(sim_all$Price) * 0.8,  # 20% lower bound
-                                   b = max(sim_all$Price) * 1.2,  # 20% upper bound
-                                   c = mean(sim_all$Price))       # Mode (most likely value)
-
-sim_all$Expenditure_Shocked <- rtriangle(nrow(sim_all), 
-                                         a = min(sim_all$Expenditure) * 0.9,  # 10% lower bound
-                                         b = max(sim_all$Expenditure) * 1.2,  # 20% upper bound
-                                         c = mean(sim_all$Expenditure))       # Mode (most likely value)
-
-
-# Recalculate revenue and gross margin
-sim_all$Revenue_Shocked <- sim_all$Yield * sim_all$Price_Shocked
-sim_all$GM_Shocked <- sim_all$Revenue_Shocked - sim_all$Expenditure_Shocked
-
-# Visualizing risk distribution
-ggplot(sim_all, aes(x = GM_Shocked, fill = System)) +
-  geom_density(alpha = 0.6) +
-  scale_fill_manual(values = c(
-    "Conventional" = "tomato2",
-    "Conservation" = "turquoise3"
-  )) +
-  labs(title = "Simulated Gross Margin Distribution (Risk Analysis)")
-
-# Visualizing risk distribution
-ggplot(sim_all, aes(x = Expenditure_Adjusted, fill = System)) +
-  geom_density(alpha = 0.6) +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  labs(title = "Simulated Gross Expenditure Distribution (Risk Analysis)")
-
-# Visualizing risk distribution
-ggplot(sim_all, aes(x = Revenue_Adjusted, fill = System)) +
-  geom_density(alpha = 0.6) +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  labs(title = "Simulated Gross Revenue Distribution (Risk Analysis)")
-
-# Visualizing risk distribution
-ggplot(sim_all, aes(x = Yield_Shocked, fill = System)) +
-  geom_density(alpha = 0.6) +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  labs(title = "Simulated Gross Revenue Distribution (Risk Analysis)")
-
-# Visualizing risk distribution
-ggplot(sim_all, aes(x = GM_inflated, fill = System)) +
-  geom_density(alpha = 0.6) +
-  scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-  labs(title = "Simulated Gross Revenue Distribution (Risk Analysis)")
-
-
-
-
-
-
-# ~ Extreme Scenario Analysis ####
-
-# Best-Case Scenario: High prices, Low input costs
-sim_all$Price_Best <- max(sim_all$Price) * 1.1
-sim_all$Expenditure_Best <- min(sim_all$Expenditure_Adjusted) * 0.9
-
-sim_all$Revenue_Best <- sim_all$Yield * sim_all$Price_Best
-sim_all$GM_Best <- sim_all$Revenue_Best - sim_all$Expenditure_Best
-
-
-
-# Worst-Case Scenario: Low prices, High input costs
-sim_all$Price_Worst <- min(sim_all$Price) * 0.9
-sim_all$Expenditure_Worst <- max(sim_all$Expenditure) * 1.1
-
-sim_all$Revenue_Worst <- sim_all$Yield * sim_all$Price_Worst
-sim_all$GM_Worst <- sim_all$Revenue_Worst - sim_all$Expenditure_Worst
-
-
-
-
-#_______________________________________________________
-# scenario 2
-# sim_all$Revenue_Best <- max(sim_all$Revenue_Adjusted) * 1.1
+# # ________________________________________####
+# #  Monte Carlo Simulation (For probabilistic risk assessment) ####
+# 
+# 
+# library(triangle)  # For triangular distributions
+# 
+# glimpse(sim_all)
+# 
+# 
+# # Simulating price variations (triangular distribution)
+# sim_all$Price_Shocked <- rtriangle(nrow(sim_all), 
+#                                    a = min(sim_all$Price) * 0.8,  # 20% lower bound
+#                                    b = max(sim_all$Price) * 1.2,  # 20% upper bound
+#                                    c = mean(sim_all$Price))       # Mode (most likely value)
+# 
+# sim_all$Expenditure_Shocked <- rtriangle(nrow(sim_all), 
+#                                          a = min(sim_all$Expenditure) * 0.9,  # 10% lower bound
+#                                          b = max(sim_all$Expenditure) * 1.2,  # 20% upper bound
+#                                          c = mean(sim_all$Expenditure))       # Mode (most likely value)
+# 
+# 
+# # Recalculate revenue and gross margin
+# sim_all$Revenue_Shocked <- sim_all$Yield * sim_all$Price_Shocked
+# sim_all$GM_Shocked <- sim_all$Revenue_Shocked - sim_all$Expenditure_Shocked
+# 
+# # Visualizing risk distribution
+# ggplot(sim_all, aes(x = GM_Shocked, fill = System)) +
+#   geom_density(alpha = 0.6) +
+#   scale_fill_manual(values = c(
+#     "Conventional" = "tomato2",
+#     "Conservation" = "turquoise3"
+#   )) +
+#   labs(title = "Simulated Gross Margin Distribution (Risk Analysis)")
+# 
+# # Visualizing risk distribution
+# ggplot(sim_all, aes(x = Expenditure_Adjusted, fill = System)) +
+#   geom_density(alpha = 0.6) +
+#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+#   labs(title = "Simulated Gross Expenditure Distribution (Risk Analysis)")
+# 
+# # Visualizing risk distribution
+# ggplot(sim_all, aes(x = Revenue_Adjusted, fill = System)) +
+#   geom_density(alpha = 0.6) +
+#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+#   labs(title = "Simulated Gross Revenue Distribution (Risk Analysis)")
+# 
+# # Visualizing risk distribution
+# ggplot(sim_all, aes(x = Yield_Shocked, fill = System)) +
+#   geom_density(alpha = 0.6) +
+#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+#   labs(title = "Simulated Gross Revenue Distribution (Risk Analysis)")
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # ~ Extreme Scenario Analysis ####
+# 
+# # Best-Case Scenario: High prices, Low input costs
+# sim_all$Price_Best <- max(sim_all$Price) * 1.1
 # sim_all$Expenditure_Best <- min(sim_all$Expenditure_Adjusted) * 0.9
+# 
+# sim_all$Revenue_Best <- sim_all$Yield * sim_all$Price_Best
 # sim_all$GM_Best <- sim_all$Revenue_Best - sim_all$Expenditure_Best
 # 
-# sim_all$Revenue_Worst <- min(sim_all$Revenue_Adjusted) * 0.9
-# sim_all$Expenditure_Worst <- max(sim_all$Expenditure_Adjusted) * 1.1
+# 
+# 
+# # Worst-Case Scenario: Low prices, High input costs
+# sim_all$Price_Worst <- min(sim_all$Price) * 0.9
+# sim_all$Expenditure_Worst <- max(sim_all$Expenditure) * 1.1
+# 
+# sim_all$Revenue_Worst <- sim_all$Yield * sim_all$Price_Worst
 # sim_all$GM_Worst <- sim_all$Revenue_Worst - sim_all$Expenditure_Worst
-
-
-
-
-
-# Melt data for comparison
-library(reshape2)
-
-sim_all_melted <- melt(sim_all, 
-                       id.vars = "System", 
-                       measure.vars = c("GM_Best", "GM_Worst"))
-
-
-unique(sim_all_melted$variable)
-
-
-ggplot(sim_all_melted, aes(x = value, fill = System)) +
-  geom_density(alpha = 0.6) +
-  facet_wrap(~variable, scales = "free_x") +
-  labs(title = "Best vs. Worst Case Gross Margin Distribution",
-       x = "Gross Margin (€ per ha)", 
-       y = "Density") +
-  theme_minimal()
-
-
-
-names(sim_all)
-
-# Probability of Negative GM under shocked conditions
-risk_summary <- sim_all %>%
-  group_by(System) %>%
-  summarise(
-    Prob_Negative_GM_Shocked = mean(GM_inflated < 0),
-    Prob_Negative_GM_Worst = mean(GM_Worst < 0),
-    Prob_Negative_GM_Best = mean(GM_Best < 0)
-  )
-
-print(risk_summary)
-
-
-
-
-
-
-
-
-
-
-
-
-# ~ Variance-Based Sensitivity Analysis (Sensitivity Indices) ####
-
-
-# library(sensitivity)
 # 
-# # Define the input matrix (you can select specific columns if necessary)
-# inputs_matrix <- as.matrix(select(sim_all, Price, Expenditure, Climate_Shock))
 # 
-# # Define the model as a function (for example, a linear regression or other model)
-# model_function <- function(X) {
-#   # For demonstration, we're just using Gross_Margin as the output directly
-#   return(sim_all$Gross_Margin)
+# 
+# 
+# #_______________________________________________________
+# # scenario 2
+# # sim_all$Revenue_Best <- max(sim_all$Revenue_Adjusted) * 1.1
+# # sim_all$Expenditure_Best <- min(sim_all$Expenditure_Adjusted) * 0.9
+# # sim_all$GM_Best <- sim_all$Revenue_Best - sim_all$Expenditure_Best
+# # 
+# # sim_all$Revenue_Worst <- min(sim_all$Revenue_Adjusted) * 0.9
+# # sim_all$Expenditure_Worst <- max(sim_all$Expenditure_Adjusted) * 1.1
+# # sim_all$GM_Worst <- sim_all$Revenue_Worst - sim_all$Expenditure_Worst
+# 
+# 
+# 
+# 
+# 
+# # Melt data for comparison
+# library(reshape2)
+# 
+# sim_all_melted <- melt(sim_all, 
+#                        id.vars = "System", 
+#                        measure.vars = c("GM_Best", "GM_Worst"))
+# 
+# 
+# unique(sim_all_melted$variable)
+# 
+# 
+# ggplot(sim_all_melted, aes(x = value, fill = System)) +
+#   geom_density(alpha = 0.6) +
+#   facet_wrap(~variable, scales = "free_x") +
+#   labs(title = "Best vs. Worst Case Gross Margin Distribution",
+#        x = "Gross Margin (€ per ha)", 
+#        y = "Density") +
+#   theme_minimal()
+# 
+# 
+# 
+# names(sim_all)
+# 
+# # # Probability of Negative GM under shocked conditions
+# # risk_summary <- sim_all %>%
+# #   group_by(System) %>%
+# #   summarise(
+# #     Prob_Negative_GM_Shocked = mean(GM_inflated < 0),
+# #     Prob_Negative_GM_Worst = mean(GM_Worst < 0),
+# #     Prob_Negative_GM_Best = mean(GM_Best < 0)
+# #   )
+# # 
+# # print(risk_summary)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # ~ Variance-Based Sensitivity Analysis (Sensitivity Indices) ####
+# 
+# 
+# # library(sensitivity)
+# # 
+# # # Define the input matrix (you can select specific columns if necessary)
+# # inputs_matrix <- as.matrix(select(sim_all, Price, Expenditure, Climate_Shock))
+# # 
+# # # Define the model as a function (for example, a linear regression or other model)
+# # model_function <- function(X) {
+# #   # For demonstration, we're just using Gross_Margin as the output directly
+# #   return(sim_all$Gross_Margin)
+# # }
+# # 
+# # # Perform Sobol sensitivity analysis
+# # sobol_analysis <- sobol(model = model_function, X1 = inputs_matrix, X2 = inputs_matrix)
+# # 
+# # # Check the sensitivity results
+# # print(sobol_analysis)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # ~ Monte Carlo Simulation Sensitivity ####
+# 
+# 
+# # Example of running Monte Carlo simulation for sensitivity, grouped by System
+# set.seed(123)
+# 
+# # Define a simple function that runs a simulation, with an additional grouping variable (System)
+# sensitivity_monte_carlo_grouped <- function(input_variable, output_variable, group_variable) {
+#   # Initialize an empty list to store results by group
+#   group_results <- list()
+#   
+#   # Loop through each unique system in the group_variable (e.g., experimental treatment "System")
+#   for (system in unique(group_variable)) {
+#     # Subset the data for the current group
+#     group_data <- which(group_variable == system)
+#     input_subset <- input_variable[group_data]
+#     output_subset <- output_variable[group_data]
+#     
+#     # Run the simulation for the current group
+#     sim_results <- replicate(1000, {
+#       # Adjust input variable randomly (for example, apply random shocks)
+#       simulated_input <- input_subset + rnorm(length(input_subset), 0, 1)
+#       
+#       # Recalculate output variable (in your case, this could be gross margin or yield)
+#       simulated_output <- lm(output_subset ~ simulated_input)$fitted.values
+#       return(simulated_output)
+#     })
+#     
+#     # Store the simulation results for the current group
+#     group_results[[system]] <- sim_results
+#   }
+#   
+#   return(group_results)
 # }
 # 
-# # Perform Sobol sensitivity analysis
-# sobol_analysis <- sobol(model = model_function, X1 = inputs_matrix, X2 = inputs_matrix)
+# # Run the Monte Carlo simulation grouped by "System"
+# simulated_results_grouped <- sensitivity_monte_carlo_grouped(sim_all$Price, sim_all$Gross_Margin, sim_all$System)
 # 
-# # Check the sensitivity results
-# print(sobol_analysis)
-
-
-
-
-
-
-
-
-
-# ~ Monte Carlo Simulation Sensitivity ####
-
-
-# Example of running Monte Carlo simulation for sensitivity, grouped by System
-set.seed(123)
-
-# Define a simple function that runs a simulation, with an additional grouping variable (System)
-sensitivity_monte_carlo_grouped <- function(input_variable, output_variable, group_variable) {
-  # Initialize an empty list to store results by group
-  group_results <- list()
-  
-  # Loop through each unique system in the group_variable (e.g., experimental treatment "System")
-  for (system in unique(group_variable)) {
-    # Subset the data for the current group
-    group_data <- which(group_variable == system)
-    input_subset <- input_variable[group_data]
-    output_subset <- output_variable[group_data]
-    
-    # Run the simulation for the current group
-    sim_results <- replicate(1000, {
-      # Adjust input variable randomly (for example, apply random shocks)
-      simulated_input <- input_subset + rnorm(length(input_subset), 0, 1)
-      
-      # Recalculate output variable (in your case, this could be gross margin or yield)
-      simulated_output <- lm(output_subset ~ simulated_input)$fitted.values
-      return(simulated_output)
-    })
-    
-    # Store the simulation results for the current group
-    group_results[[system]] <- sim_results
-  }
-  
-  return(group_results)
-}
-
-# Run the Monte Carlo simulation grouped by "System"
-simulated_results_grouped <- sensitivity_monte_carlo_grouped(sim_all$Price, sim_all$Gross_Margin, sim_all$System)
-
-# Check the results for a specific system (e.g., "Conservation Agriculture")
-simulated_results_conservation <- simulated_results_grouped[["Conservation Agriculture"]]
-
-
-
-
-
-
+# # Check the results for a specific system (e.g., "Conservation Agriculture")
+# simulated_results_conservation <- simulated_results_grouped[["Conservation Agriculture"]]
+# 
+# 
+# 
+# 
+# 
+# 
 
 
 

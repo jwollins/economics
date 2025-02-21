@@ -5,109 +5,161 @@
 
 ## 05 STATS ####
 
-## 05.1 DATA SUBSET ####
+#_____________________________________####
+# Packages ####
 
-wheat_dat <- subset(summary_dat, summary_dat$crop == "Winter Wheat")
-
-bean_dat <- subset(summary_dat, summary_dat$crop == "Spring Beans")
-
+source(file = "economics_scripts/01_packages.R")
 
 
-
-## 05.2 MODELS ####
-
-#### Yield ####
-
-# run glm with 
-glm <- glm(yield_t_ha ~ treatment,
-           data = wheat_dat)
-
-summary(glm) 
+#__________________________________####
+# Functions ####
 
 
-glm <- glm(yield_t_ha ~ treatment,
-           data = bean_dat)
-
-summary(glm) 
+source(file = "~/Documents/GitHub/phd_tools/fun_glm_diagnostic_plots.R")
+source(file = "~/Documents/GitHub/phd_tools/fun_distribution_plots.R")
 
 
 
+#__________________________________####
+# Data ####
 
-### Grain gross Margin ####
+setwd(dir = "~/OneDrive - Harper Adams University/Data/economics/")
 
-glm <- glm(grain_gross_margin ~ treatment,
-           data = bean_dat)
+# expenditure data 
 
-summary(glm)
+dat <- read.csv(file = "data/processed_data/summary_economic_data.csv")
 
+names(dat)
 
-glm <- glm(grain_gross_margin ~ treatment,
-           data = wheat_dat)
-
-summary(glm) 
+dat$treatment <- factor(x = dat$treatment, levels = c("Conventional", "Conservation"))
 
 
 
 
-### Grain gross Margin ####
-
-glm <- glm(gross_margin ~ treatment,
-           data = bean_dat)
-
-summary(glm)
+#_____________________________________####
+# MODELS ####
 
 
-glm <- glm(gross_margin ~ treatment,
-           data = wheat_dat)
+# ~ GM ####
 
-summary(glm) 
+# Shift the data to ensure positivity
+dat$total_gm_ha_shifted <- dat$total_gm_ha - min(dat$total_gm_ha) + 1
 
+# Apply the square transformation
+dat$total_gm_ha_transformed <- dat$total_gm_ha_shifted^2
 
-
-
-
-### Gross margin ####
-
-glm <- glm(gross_profit_margin ~ treatment,
-           data = bean_dat)
-
-summary(glm)
+# Plot the transformed distribution
+distribution_plots(data = dat, variable = dat$total_gm_ha_transformed, colour = dat$treatment)
 
 
-glm <- glm(gross_profit_margin ~ treatment,
-           data = wheat_dat)
+lmm_model <- lmer(total_gm_ha_transformed ~ treatment + (1 | block) + (1 | year) + (1 | crop.x), 
+                   data = dat)
 
-summary(glm) 
+# View summary
+summary(lmm_model)
 
+# Run pairwise comparisons for the 'Treatment' factor
+pairwise_comparisons <- emmeans(lmm_model, pairwise ~ treatment)
 
+# View the results of pairwise comparisons
+summary(pairwise_comparisons)
 
-
-
-### Revenue ####
-
-glm <- glm(total_revenue ~ treatment,
-           data = bean_dat)
-
-summary(glm)
-
-
-glm <- glm(total_revenue ~ treatment,
-           data = wheat_dat)
-
-summary(glm) 
+diagnostic_plots_glm(model = lmm_model)
 
 
 
 
 
 
-## 05.3 STATS ####
+# ~ Expenditure ####
+
+# Shift the data to ensure positivity
+dat$total_expenditure_ha_shifted <- dat$total_expenditure_ha - min(dat$total_expenditure_ha) + 1
+
+# Apply the square transformation
+dat$total_expenditure_ha_transformed <- dat$total_expenditure_ha_shifted^2
+
+# Plot the transformed distribution
+distribution_plots(data = dat, variable = dat$total_expenditure_ha_transformed, colour = dat$treatment)
 
 
-# 1. Mixed effects model
-# (1|block) identifies bird as the random effects variable
+lmm_model <- lmer(total_expenditure_ha_transformed ~ treatment + (1 | year) + (1 | crop.x), 
+                  data = dat)
 
-m1 <- lme(fixed = gross_margin ~ factor(treatment),
-          random = ~1|block,
-          data = wheat_dat)
-anova(m1)
+# View summary
+summary(lmm_model)
+
+# Run pairwise comparisons for the 'Treatment' factor
+pairwise_comparisons <- emmeans(lmm_model, pairwise ~ treatment)
+
+# View the results of pairwise comparisons
+summary(pairwise_comparisons)
+
+diagnostic_plots_glm(model = lmm_model)
+
+
+
+
+
+# ~ Revenue ####
+
+# Shift the data to ensure positivity
+dat$total_revenue_ha_shifted <- dat$total_revenue_ha - min(dat$total_revenue_ha) + 1
+
+# Apply the square transformation
+dat$total_revenue_ha_transformed <- dat$total_revenue_ha_shifted^2
+
+# Plot the transformed distribution
+distribution_plots(data = dat, 
+                   variable = dat$total_revenue_ha_transformed, 
+                   colour = dat$treatment)
+
+
+lmm_model <- lmer(total_revenue_ha_transformed ~ treatment + (1 | block) + (1 | year) + (1 | crop.x), 
+                  data = dat)
+
+# View summary
+summary(lmm_model)
+
+# Run pairwise comparisons for the 'Treatment' factor
+pairwise_comparisons <- emmeans(lmm_model, pairwise ~ treatment)
+
+# View the results of pairwise comparisons
+summary(pairwise_comparisons)
+
+diagnostic_plots_glm(model = lmm_model)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

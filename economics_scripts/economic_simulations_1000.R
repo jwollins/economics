@@ -2217,7 +2217,8 @@ apply_climate_shocks <- function(data, key, shock_prob, shock_severity) {
       Climate_Shock = runif(n()) < shock_prob[Year],  # Use extracted Year
       Shock_Factor = ifelse(Climate_Shock, 1 - shock_severity(), 1),  
       Yield_Shocked = Yield * Shock_Factor,  
-      Revenue_Shocked = Yield_Shocked * Price
+      Revenue_Shocked = Yield_Shocked * Price,
+      GM_Shocked =  Revenue_Shocked - Expenditure
     )
 }
 
@@ -2265,7 +2266,9 @@ key_columns <- c("Year", "run", "Crop", "System")
 
 sim_all <- sim_all %>%
   left_join(revenue_sim_all_shocked %>% 
-              dplyr::select(Year, run, Crop, System, Revenue_Shocked, Yield_Shocked, Shock_Factor, Climate_Shock), 
+              dplyr::select(Year, run, Crop, System, 
+                            Revenue_Shocked, Yield_Shocked, Shock_Factor, 
+                            Climate_Shock, GM_Shocked), 
             by = key_columns)
 
 
@@ -2368,187 +2371,178 @@ ggsave(plot = fig_joint_Yield_Shocked_sim,
 
 
 
-
-
-
-
-
-
-
 # ____________________________####
-# Inflation ####
+# Climate shocked GM ####
 
 
 
 
-# # ~ Define Inflation on Expenditure ####
-# 
-# # Define annual expenditure inflation rate (2-4%)
-# expenditure_inflation <- 0.02  
-# 
-# # Define random market fluctuation (±2%)
-# expenditure_volatility <- 0.02  
-# 
-# 
-# 
-# 
-# 
-# # ~ Function ####
-# 
-# # Define the function to apply inflation correctly
-# 
-# apply_inflation <- function(data, inflation_rate, volatility_rate) {
-#   # Get the number of rows in the data
-#   n_rows <- nrow(data)
-#   
-#   # Calculate the inflation factor with a random market fluctuation for each row
-#   inflation_factor <- (1 + inflation_rate) * (1 + runif(n_rows, -volatility_rate, volatility_rate))
-#   
-#   # Apply inflation to the revenue (adjusting by inflation factor)
-#   data %>%
-#     mutate(
-#       Revenue_Adjusted = Revenue_Shocked * inflation_factor,  # Apply inflation to shocked revenue
-#       Expenditure_Adjusted = Expenditure * inflation_factor,  # Apply inflation to shocked revenue
-#     )
-# }
-# 
-# 
-# 
-# 
-# 
-# # ~ Apply inflation function ####
-# 
-# 
-# 
-# # Apply to the dataset with climate shocks
-# sim_all <- sim_all %>%
-#   group_by(Year, run) %>%
-#   group_modify(~ apply_inflation(.x, expenditure_inflation, expenditure_volatility)) %>%
-#   ungroup()
-# 
-# 
-# # Check the result
-# 
-# glimpse(sim_all)
-# 
-# 
-# sim_all$GM_inflated <- sim_all$Revenue_Adjusted - sim_all$Expenditure_Adjusted
-# 
-# glimpse(sim_all)
-# 
-# 
-# 
-# 
-# 
-# # ~ Plots ####
-# 
-# 
-# ## ~~ Revenue + inflation ####
-# 
-# fig_revenue_inflation_nsim_plot <-
-#   ggplot(data = sim_all, 
-#          aes(x = Year, 
-#              y = Revenue_Adjusted, 
-#              group = interaction(Crop, as.factor(run)))) +
-#   geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
-#   labs(
-#     x = "Year",
-#     y = "Revenue (£/ha)") +
-#   facet_wrap(~ System,
-#              ncol = 2) +
-#   theme_bw() + 
-#   guides(colour = guide_legend(override.aes = list(alpha = 1, linewidth = 5))) + 
-#   theme(legend.position = "bottom",
-#         strip.text.x = element_text(size = 12, 
-#                                     # color = "black", 
-#                                     face = "bold.italic"))
-# 
-# fig_revenue_inflation_nsim_plot
-# 
-# 
-# fig_revenue_inflation_box_plot <-
-#   ggplot(data = sim_all, 
-#          aes(x = System, 
-#              y = Revenue_Adjusted, 
-#              fill = System)) +
-#   geom_violin(alpha = 0.4, color = NA) +  # Transparent violin for density
-#   geom_boxplot(width = 0.2, outlier.alpha = 0.2) +  # Compact box plot overlay
-#   theme_minimal() +
-#   labs(
-#     x = "Treatment",
-#     y = "Revenue") +
-#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-#   theme(axis.text.x = element_blank(), 
-#         legend.position = "bottom") 
-# 
-# fig_revenue_inflation_box_plot
-# 
-# # ggsave(plot = fig_revenue_inflation_box_plot, 
-# #        filename = "plots/simulation_plots/fig_revenue_inflation_box_plot.png")
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# ## ~~ Expenditure + inflation ####
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# ## ~~ GM + inflation ####
-# 
-# 
-# fig_GM_inflation_nsim_plot <-
-#   ggplot(data = sim_all, 
-#          aes(x = Year, 
-#              y = GM_inflated, 
-#              group = interaction(Crop, as.factor(run)))) +
-#   geom_line(alpha = 0.05, aes(color = Crop), size = 0.5) +
-#   labs(
-#     x = "Year",
-#     y = "GM (£/ha)") +
-#   facet_wrap(~ System,
-#              ncol = 2) +
-#   theme_bw() + 
-#   guides(colour = guide_legend(override.aes = list(alpha = 1, linewidth = 5))) + 
-#   theme(legend.position = "bottom",
-#         strip.text.x = element_text(size = 12, 
-#                                     # color = "black", 
-#                                     face = "bold.italic"))
-# 
-# fig_GM_inflation_nsim_plot
-# 
-# 
-# 
-# 
-# fig_GM_inflation_box_plot <-
-#   ggplot(data = sim_all, 
-#          aes(x = System, 
-#              y = GM_inflated, 
-#              fill = System)) +
-#   geom_violin(alpha = 0.4, color = NA) +  # Transparent violin for density
-#   geom_boxplot(width = 0.2, outlier.alpha = 0.2) +  # Compact box plot overlay
-#   theme_minimal() +
-#   labs(
-#     x = "Treatment",
-#     y = "Revenue") +
-#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
-#   theme(axis.text.x = element_blank(), 
-#         legend.position = "bottom") 
-# 
-# fig_GM_inflation_box_plot
-# 
-# 
-# 
-# 
-# 
-# glimpse(sim_all)
+# ~ Calculate cumulative GM ####
+
+names(sim_all)
+
+# Compute cumulative gross margin for each run
+sim_all_cumulative_shocked <- sim_all %>%
+  group_by(run, System, Year) %>%  
+  summarise(Yearly_GM = sum(GM_Shocked, na.rm = TRUE), .groups = "drop") %>%  
+  arrange(run, System, Year) %>%  
+  group_by(run, System) %>%  
+  mutate(Cumulative_Gross_Margin = cumsum(Yearly_GM)) %>%  
+  ungroup()
+
+# Compute summary statistics (mean and quantiles)
+sim_all_cumulative_summary_shocked <- sim_all_cumulative %>%
+  group_by(System, Year) %>%
+  summarise(
+    mean_CGM = mean(Cumulative_Gross_Margin, na.rm = TRUE),
+    lower_CGM = quantile(Cumulative_Gross_Margin, 0.05, na.rm = TRUE),  # 5th percentile
+    upper_CGM = quantile(Cumulative_Gross_Margin, 0.95, na.rm = TRUE),  # 95th percentile
+    .groups = "drop"
+  )
+
+
+
+
+
+
+# ~ Plots ####
+
+names(sim_all)
+
+fig_GM_Shocked_nsim_plot <-
+  ggplot(sim_all, 
+         aes(x = Year, 
+             y = GM_Shocked, 
+             group = interaction(Crop, as.factor(run)))) +
+  geom_line(alpha = 0.02, 
+            aes(color = Crop_Name), 
+            linewidth = 0.5) +
+  labs(
+    x = "Year",
+    y = expression("Gross_Margin (£ ha"^{-1}~")"), 
+    color = "Crop") +
+  facet_wrap(~ System,
+             ncol = 2) +
+  theme_bw() + 
+  guides(colour = guide_legend(override.aes = list(alpha = 1, linewidth = 5))) + 
+  theme(legend.position = "bottom",
+        strip.text.x = element_text(size = 12, 
+                                    # color = "black", 
+                                    face = "bold.italic"))
+
+
+fig_GM_Shocked_nsim_plot
+
+
+fig_GM_Shocked_hist_nsim_plot <-
+  ggplot(sim_all,
+         aes(x = GM_Shocked,
+             fill = Crop_Name)) +
+  geom_histogram(bins = 30,
+                 alpha = 0.6) +
+  facet_wrap(~ System) +
+  labs( x = expression("GM_Shocked (£ ha"^{-1}~")"), 
+        y = "Frequency",
+        fill = "Crop"  # Change legend title here
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom", 
+        strip.text.x = element_text(size = 12,
+                                    # color = "black",
+                                    face = "bold.italic"))
+
+fig_GM_Shocked_hist_nsim_plot
+
+
+fig_joint_GM_Shocked_sim <-
+  ggarrange(fig_GM_Shocked_nsim_plot,
+            fig_GM_Shocked_hist_nsim_plot,
+            ncol = 1,
+            nrow = 2, 
+            common.legend = TRUE, 
+            legend = "bottom", 
+            align = "hv", 
+            labels = c("A","B"))
+
+fig_joint_GM_Shocked_sim
+
+ggsave(plot = fig_joint_GM_Shocked_sim,
+       filename = "plots/simulation_plots/fig_joint_GM_Shocked_nsim_plot.png",
+       width = 8, height = 6)
+
+
+
+
+
+
+
+
+# Plot cumulative gross margin with simulations and summary statistics
+fig_GM_Shocked_cumulative_plot <-
+  ggplot() +
+  
+  # Add individual simulation lines (original data)
+  geom_line(data = sim_all_cumulative_shocked, 
+            aes(x = Year, 
+                y = Cumulative_Gross_Margin, 
+                group = as.factor(run), 
+                color = System),
+            alpha = 0.05, 
+            linewidth = 0.5) +
+  
+  # Add uncertainty band (5th–95th percentile)
+  geom_ribbon(data = sim_all_cumulative_summary_shocked, 
+              aes(x = Year, 
+                  ymin = lower_CGM, 
+                  ymax = upper_CGM), 
+              alpha = 0, color = "black", 
+              linetype = "dotted") +
+  
+  # Add mean cumulative gross margin line
+  geom_line(data = sim_all_cumulative_summary_shocked, 
+            aes(x = Year, 
+                y = mean_CGM, 
+                color = "black"), 
+            linewidth = 1, 
+            linetype = "dashed") +
+  
+  # Custom colors
+  scale_color_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+  
+  # Labels and theme
+  labs(
+    x = "Year",
+    y = "Cumulative Gross Margin Climate Shocked (£/ha)") +
+  facet_wrap(~ System, ncol = 2) +
+  theme_bw() + 
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic"))
+
+fig_GM_Shocked_cumulative_plot
+
+
+ggsave(filename = "plots/simulation_plots/fig_GM_cumulative_joint_plot.png", 
+       plot = fig_gm_cumulative_plot, 
+       width = 8, height = 5)
+
+
+
+
+
+
+
+
+
+
+
+
+# 
+# ggsave(plot = fig_gm_box_plot, filename = "plots/simulation_plots/fig_gm_box_plot.png")
+
+
+
+
+
 
 
 
@@ -2601,16 +2595,20 @@ glimpse(sim_all)
 
 # Compute cumulative gross margin for each run
 
-sim_all_cumulative <- sim_all %>%
+sim_all_cumulative_GM_Shocked <- 
+  sim_all %>%
   group_by(run, System, Year) %>%  
-  summarise(Yearly_GM = sum(Gross_Margin, na.rm = TRUE), .groups = "drop") %>%  
+  summarise(Yearly_GM = sum(GM_Shocked, na.rm = TRUE), .groups = "drop") %>%  
   arrange(run, System, Year) %>%  
   group_by(run, System) %>%  
   mutate(Cumulative_Gross_Margin = cumsum(Yearly_GM)) %>%  
   ungroup()
 
+
+
 # Compute summary statistics (mean and quantiles)
-sim_all_cumulative_summary <- sim_all_cumulative %>%
+sim_all_cumulative_summary_GM_Shocked <- 
+  sim_all_cumulative %>%
   group_by(System, Year) %>%
   summarise(
     mean_CGM = mean(Cumulative_Gross_Margin, na.rm = TRUE),
@@ -2752,24 +2750,176 @@ print(summary_Revenue_Shocked, n = 54)
 
 
 
-# ~ GM summary ####
+# ~ Expenditure summary ####
 
-summary_GM <- sim_all %>%
-  group_by(System, Year) %>%
+
+names(sim_all)
+
+glimpse(sim_all)
+
+
+
+summary_Expenditure <- sim_all %>%
+  group_by(System, Year, Crop_Name) %>%
   summarise(
-    mean_GM = mean(Gross_Margin, na.rm = TRUE),
-    lower_GM = quantile(Gross_Margin, 0.05, na.rm = TRUE),
-    upper_GM = quantile(Gross_Margin, 0.95, na.rm = TRUE),
+    mean_Expenditure = mean(Expenditure, na.rm = TRUE),
+    sd_Expenditure = sd(Expenditure, na.rm = TRUE),  
+    se_Expenditure = sd_Expenditure / sqrt(n()),  
+    lower_Expenditure = quantile(Expenditure, 0.05, na.rm = TRUE),
+    upper_Expenditure = quantile(Expenditure, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(System, Crop_Name, Year) %>%  # Ensure correct order before lagging
+  group_by(System, Crop_Name, Year) 
+
+glimpse(summary_Expenditure)
+
+total_pct_increase_Expenditure <- 
+  summary_Expenditure %>%
+  group_by(System, Crop_Name) %>%
+  summarise(
+    start_Expenditure = first(mean_Expenditure),  # in Year 1
+    end_Expenditure = last(mean_Expenditure),  # in Year 6
+    total_pct_increase = (end_Expenditure - start_Expenditure) / start_Expenditure * 100,
     .groups = "drop"
   )
 
+
+print(summary_Expenditure, n = 54)
+
+
+
+
+
+# ~ GM summary ####
+
+names(sim_all)
+
+summary_GM_Shocked <- sim_all %>%
+  group_by(System, Year, Crop_Name) %>%
+  summarise(
+    mean_GM_Shocked = mean(GM_Shocked, na.rm = TRUE),
+    sd_GM_Shocked = sd(GM_Shocked, na.rm = TRUE),  
+    se_GM_Shocked = sd_GM_Shocked / sqrt(n()),  
+    lower_GM_Shocked = quantile(GM_Shocked, 0.05, na.rm = TRUE),
+    upper_GM_Shocked = quantile(GM_Shocked, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(System, Crop_Name, Year) %>%  # Ensure correct order before lagging
+  group_by(System, Crop_Name, Year) 
+
+glimpse(summary_GM_Shocked)
+
+total_pct_increase_GM_Shocked <- 
+  summary_GM_Shocked %>%
+  group_by(System, Crop_Name) %>%
+  summarise(
+    start_GM_Shocked = first(mean_GM_Shocked),  # in Year 1
+    end_GM_Shocked = last(mean_GM_Shocked),  # in Year 6
+    total_pct_increase = ifelse(
+      start_GM_Shocked + end_GM_Shocked == 0,  # Avoid division by zero
+      NA,  # Undefined change
+      (end_GM_Shocked - start_GM_Shocked) / ((start_GM_Shocked + end_GM_Shocked) / 2) * 100
+    ),
+    .groups = "drop"
+  )
+
+
+
+print(summary_GM_Shocked, n = 54)
+
+View(summary_GM_Shocked)
+View(total_pct_increase_GM_Shocked)
+
+
+# summary_GM <- sim_all %>%
+#   group_by(System, Year) %>%
+#   summarise(
+#     mean_GM = mean(GM_Shocked, na.rm = TRUE),
+#     lower_GM = quantile(GM_Shocked, 0.05, na.rm = TRUE),
+#     upper_GM = quantile(GM_Shocked, 0.95, na.rm = TRUE),
+#     .groups = "drop"
+#   )
+
 loss_probability <- sim_all %>%
   group_by(System) %>%
-  summarise(probability_loss = mean(Gross_Margin < 0, na.rm = TRUE))
+  summarise(probability_loss = mean(GM_Shocked < 0, na.rm = TRUE))
+
+print(loss_probability)
+
+loss_severity <- sim_all %>%
+  group_by(System) %>%
+  summarise(expected_loss = mean(GM_Shocked[GM_Shocked < 0], na.rm = TRUE))
+
+print(loss_severity)
+
+library(quantmod)
+var_95 <- sim_all %>%
+  group_by(System) %>%
+  summarise(VaR_95 = quantile(GM_Shocked, 0.05, na.rm = TRUE))
+
+print(var_95)
+
+
+# Create a LaTeX table
+loss_probability_table <- loss_probability %>%
+  kbl(format = "latex", 
+      booktabs = TRUE, 
+      caption = "My Table", 
+      label = "MyLabel", 
+      digits = 2) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"), # Avoid 'tabu'
+    full_width = FALSE,                 # Set to FALSE for `tabular`
+    font_size = 15                     # Adjust font size for readability
+  ) %>%
+  row_spec(0, bold = TRUE)
+
+print(loss_probability_table)
 
 
 
 
+ggplot(sim_all, aes(x = GM_Shocked, fill = System)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "Density Plot of Gross Margins", x = "Gross Margin", y = "Density")
+
+
+
+sim_all <- sim_all %>%
+  mutate(financial_state = case_when(
+    GM_Shocked < 0 ~ "Loss",
+    GM_Shocked >= 0 & GM_Shocked < 100 ~ "Low Profit",
+    GM_Shocked >= 100 ~ "High Profit"
+  ))
+
+state_probabilities <- sim_all %>%
+  group_by(System, financial_state) %>%
+  summarise(probability = n() / nrow(sim_all))
+
+print(state_probabilities)
+
+variability <- sim_all %>%
+  group_by(System) %>%
+  summarise(CV = sd(GM_Shocked, na.rm = TRUE) / mean(GM_Shocked, na.rm = TRUE))
+
+print(variability)
+
+
+loss_probability_time <- sim_all %>%
+  group_by(System, Year) %>%
+  summarise(probability_loss = mean(GM_Shocked < 0, na.rm = TRUE))
+
+ggplot(loss_probability_time, aes(x = Year, y = probability_loss, color = System)) +
+  geom_line() +
+  labs(title = "Probability of Loss Over Time", x = "Year", y = "Loss Probability") +
+  theme_minimal()
+
+
+
+
+glimpse(sim_all)
 
 
 
@@ -2778,11 +2928,11 @@ loss_probability <- sim_all %>%
 
 
 # Plot cumulative gross margin with simulations and summary statistics
-fig_gm_cumulative_plot <-
+fig_GM_Shocked_cumulative_plot <-
   ggplot() +
   
   # Add individual simulation lines (original data)
-  geom_line(data = sim_all_cumulative, 
+  geom_line(data = sim_all_cumulative_GM_Shocked, 
             aes(x = Year, 
                 y = Cumulative_Gross_Margin, 
                 group = as.factor(run), 
@@ -2812,7 +2962,7 @@ fig_gm_cumulative_plot <-
   # Labels and theme
   labs(
     x = "Year",
-    y = "Inflation-Adjusted 6-year Gross Margin (£/ha)") +
+    y = "6-year Gross Margin (£/ha)") +
   facet_wrap(~ System, ncol = 2) +
   theme_bw() + 
   theme(legend.position = "bottom",  
@@ -2821,18 +2971,18 @@ fig_gm_cumulative_plot <-
   # Improve legend appearance
   guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 2.5)))
 
-fig_gm_cumulative_plot
+fig_GM_Shocked_cumulative_plot
 
 
-ggsave(filename = "plots/simulation_plots/fig_gm_cumulative_plot.png", 
-       plot = fig_gm_cumulative_plot, width = 8, height = 5)
+ggsave(filename = "plots/simulation_plots/fig_GM_Shocked_cumulative_plot.png", 
+       plot = fig_GM_Shocked_cumulative_plot, width = 8, height = 5)
 
 
 
 names(sim_all_cumulative)
 
 
-fig_GM_inflation_bar_plot <- 
+fig_GM_Shocked_bar_plot <- 
   ggplot(data = summary_table, 
          aes(x = System, 
              y = Gross_Margin_mean, 
@@ -2847,18 +2997,39 @@ fig_GM_inflation_bar_plot <-
   theme_bw() + 
   labs(
     x = "Treatment System",
-    y = "Inflation-Adjusted 6-year Gross Margin (£/ha)"
+    y = "6-year Gross Margin (£/ha)"
   ) +
   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
   theme(legend.position = "bottom")
 
-print(fig_GM_inflation_bar_plot)
+print(fig_GM_Shocked_bar_plot)
 
-ggsave(filename = "plots/simulation_plots/fig_gm_inflated_plot.png", width = 6, height = 5)
+ggsave(filename = "plots/simulation_plots/fig_GM_Shocked_plot.png", 
+       width = 6, height = 5)
 
 
 
-ggarrange(fig_gm_cumulative_plot, fig_GM_inflation_bar_plot, 
+# 
+# fig_GM_Shocked_box_violin_plot <- 
+#   ggplot(data = sim_all_cumulative_shocked, 
+#          aes(x = System, 
+#              y = Cumulative_Gross_Margin, 
+#              fill = System)) +
+#   geom_violin(alpha = 0.5, trim = FALSE) +  # Violin plot
+#   geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.8) +  # Boxplot inside the violin
+#   theme_bw() + 
+#   labs(
+#     x = "Treatment System",
+#     y = "6-year Gross Margin (£/ha)"
+#   ) +
+#   scale_fill_manual(values = c("Conventional" = "tomato2", "Conservation" = "turquoise3")) +
+#   theme(legend.position = "bottom")
+# 
+# fig_GM_Shocked_box_violin_plot
+
+
+
+ggarrange(fig_GM_Shocked_cumulative_plot, fig_GM_Shocked_bar_plot, 
           ncol = 2, nrow = 1, 
           widths = c(2, 1), # Make the first plot span 2 columns
           common.legend = TRUE, 
@@ -2866,10 +3037,7 @@ ggarrange(fig_gm_cumulative_plot, fig_GM_inflation_bar_plot,
           labels = c("A","B"))  
 
 
-ggsave(filename = "plots/simulation_plots/fig_rotation_GM_plot.png", width = 9, height = 4.5)
-
-
-
+ggsave(filename = "plots/simulation_plots/fig_rotation_GM_Shocked_plot.png", width = 9, height = 4.5)
 
 
 
@@ -2882,16 +3050,180 @@ ggsave(filename = "plots/simulation_plots/fig_rotation_GM_plot.png", width = 9, 
 # 
 # 
 # # ~ Correlation Analysis (Simple Sensitivity Check) ####
-# 
-# # Correlation analysis between selected input and output variables
-# cor_results <- sim_all %>%
-#   dplyr::select(Price, Expenditure, Yield_Shocked, Revenue_Adjusted, Gross_Margin) %>%
-#   cor(use = "complete.obs")
-# 
-# print(cor_results)
-# 
-# 
-# 
+
+names(sim_all)
+
+corr_plot_shock_factor <-
+ggplot(data = sim_all, 
+       aes(y = Shock_Factor, 
+           x = GM_Shocked, 
+           fill = Crop_Name, 
+           colour = Crop_Name)) +
+  geom_point(alpha = 0.2) + 
+  ylim(0.7,0.95) +
+  facet_wrap(~ System, ncol = 2) +
+  theme_bw() +
+  labs(
+       y = "Shock Factor",
+       x = expression("Effect on Gross Margin (" ~ "£ ha"^{-1} ~ ")"), 
+       color = "Crop",    # New legend title for color
+       fill = "Crop") + 
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic")) +
+  
+  # Improve legend appearance
+  guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 2.5)))
+
+corr_plot_shock_factor
+
+
+corr_plot_yield <-
+  ggplot(data = sim_all, 
+         aes(y = Yield, 
+             x = GM_Shocked, 
+             fill = Crop_Name, 
+             colour = Crop_Name)) +
+  geom_point(alpha = 0.2) + 
+  facet_wrap(~ System, ncol = 2) +
+  theme_bw() +
+  labs(
+       y = expression("Yield (" ~ "t ha"^{-1} ~ ")"),
+       x = expression("Effect on Gross Margin (" ~ "£ ha"^{-1} ~ ")"), 
+       color = "Crop",    # New legend title for color
+       fill = "Crop") + 
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic")) +
+  
+  # Improve legend appearance
+  guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 2.5)))
+
+corr_plot_yield
+
+
+corr_plot_price <-
+  ggplot(data = sim_all, 
+         aes(y = Price, 
+             x = GM_Shocked, 
+             fill = Crop_Name, 
+             colour = Crop_Name)) +
+  geom_point(alpha = 0.2) + 
+  facet_wrap(~ System, ncol = 2) +
+  theme_bw() +
+  labs(
+    y = expression("Crop Price (" ~ "£ t"^{-1} ~ ")"),
+    x = expression("Effect on Gross Margin (" ~ "£ ha"^{-1} ~ ")"), 
+    color = "Crop",    # New legend title for color
+    fill = "Crop") + 
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic")) +
+  
+  # Improve legend appearance
+  guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 2.5)))
+
+corr_plot_price
+
+
+
+
+
+
+## ~~ Correlation table ####
+
+cor_by_system <- sim_all %>%
+  group_by(System) %>%
+  summarise(
+    cor_Yield = cor(Yield, GM_Shocked, use = "complete.obs"),
+    cor_Price = cor(Price, GM_Shocked, use = "complete.obs"),
+    cor_Shock_Factor = cor(Shock_Factor, GM_Shocked, use = "complete.obs")
+  )
+
+print(cor_by_system)
+
+# Create a LaTeX table
+cor_by_system_table <- cor_by_system %>%
+  kbl(format = "latex", 
+      booktabs = TRUE, 
+      caption = "My Table", 
+      label = "MyLabel", 
+      digits = 2) %>%
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"), # Avoid 'tabu'
+    full_width = FALSE,                 # Set to FALSE for `tabular`
+    font_size = 15                     # Adjust font size for readability
+  ) %>%
+  row_spec(0, bold = TRUE)
+
+print(cor_by_system_table)
+
+
+
+
+
+
+# ~ Tornado plot ####
+
+names(sim_all)
+
+glimpse(sim_all)
+
+unique(sim_all$sh)
+
+summary(sim_all$Shock_Factor)
+
+
+sensitivity_results <- sim_all %>%
+  group_by(System) %>%  # Grouping by System
+  summarise(
+    Yield = quantile(GM_Shocked[Yield > median(Yield)], 0.75) - 
+      quantile(GM_Shocked[Yield < median(Yield)], 0.25),
+    Price = quantile(GM_Shocked[Price > median(Price)], 0.75) - 
+      quantile(GM_Shocked[Price < median(Price)], 0.25),
+    Shock_Factor = quantile(GM_Shocked[Shock_Factor >= median(Shock_Factor)], 0.95) -
+      quantile(GM_Shocked[Shock_Factor < median(Shock_Factor)], 0.75)
+  ) %>%
+  pivot_longer(cols = -System, names_to = "Variable", values_to = "Effect") 
+
+
+
+# Check for any NA values
+sensitivity_results
+
+sensitivity_results$Variable[3] <- "Climate\nShock\nFactor"
+sensitivity_results$Variable[6] <- "Climate\nShock\nFactor"
+
+sensitivity_plot <- 
+  ggplot(data = sensitivity_results, 
+         aes(y = reorder(Variable, Effect), 
+             x = Effect)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  facet_wrap(~ System) +
+  labs(
+    y = "Input Variable",
+    x = expression("Effect on Gross Margin (" ~ "£ ha"^{-1} ~ ")") 
+  ) +
+  theme_bw() + 
+  theme(legend.position = "bottom",  
+        strip.text.x = element_text(size = 12, face = "bold.italic"))
+
+
+sensitivity_plot
+
+
+
+ggarrange(corr_plot_yield, 
+          corr_plot_price, 
+          corr_plot_shock_factor,
+          sensitivity_plot, 
+          ncol = 2, 
+          nrow = 2, labels = c("A", "B", "C", "D"), 
+          legend = "bottom", 
+          common.legend = TRUE, align = "hv")
+
+ggsave(filename = "plots/simulation_plots/sensitivity_analysis/joint_sense_GM_plots.png", 
+       width = 9, height = 7)
+
+
 # 
 # 
 # 
@@ -2907,15 +3239,13 @@ ggsave(filename = "plots/simulation_plots/fig_rotation_GM_plot.png", width = 9, 
 
 # ~ Partial Correlation (Controlling for Other Variables) ####
 
+# Partial correlation between Price and Yield_Shocked, controlling for Expenditure
+pcor_results <- pcor.test(sim_all$Price, sim_all$Yield_Shocked, sim_all$Expenditure)
+print(pcor_results)
 
-
-# # Partial correlation between Price and Yield_Shocked, controlling for Expenditure
-# pcor_results <- pcor.test(sim_all$Price, sim_all$Yield_Shocked, sim_all$Expenditure)
-# print(pcor_results)
-# 
-# # Partial correlation between Price and Yield_Shocked, controlling for Climate_Shock
-# pcor_results <- pcor.test(sim_all$Price, sim_all$Yield_Shocked, sim_all$Climate_Shock)
-# print(pcor_results)
+# Partial correlation between Price and Yield_Shocked, controlling for Climate_Shock
+pcor_results <- pcor.test(sim_all$Price, sim_all$Yield_Shocked, sim_all$Climate_Shock)
+print(pcor_results)
 
 
 
@@ -2924,7 +3254,34 @@ ggsave(filename = "plots/simulation_plots/fig_rotation_GM_plot.png", width = 9, 
 
 
 # # ~  Sobol' Sensitivity Analysis (Variance-based) ####
-# 
+
+library(sensitivity)
+library(dplyr)
+
+# Example: Splitting the simulation data into two groups (this is just one approach;
+# your design might require a more rigorous setup)
+X1 <- sim_all %>%
+  dplyr::filter(run %% 2 == 0) %>%
+  dplyr::select(Price, Yield, Shock_Factor) %>%
+  as.matrix()
+
+X2 <- sim_all %>%
+  dplyr::filter(run %% 2 == 1) %>%
+  dplyr::select(Price, Yield, Shock_Factor) %>%
+  as.matrix()
+
+# Corresponding outputs (if you have paired output data)
+Y1 <- sim_all %>% filter(run %% 2 == 0) %>% pull(GM_Shocked)
+Y2 <- sim_all %>% filter(run %% 2 == 1) %>% pull(GM_Shocked)
+
+# Run the Sobol analysis; if you have a model function, you can pass it via the model argument.
+sobol_result <- sobol2002(model = NULL, X1 = X1, X2 = X2, nboot = 100)
+print(sobol_result)
+
+
+
+
+
 # library(sensitivity)
 # 
 # # Define model function
@@ -2943,9 +3300,9 @@ ggsave(filename = "plots/simulation_plots/fig_rotation_GM_plot.png", width = 9, 
 # )
 # 
 # # Perform Sobol' analysis
-# sobol_result <- sobol(model = model_func, 
-#                       X1 = X_sample, 
-#                       X2 = X_sample, 
+# sobol_result <- sobol(model = model_func,
+#                       X1 = X_sample,
+#                       X2 = X_sample,
 #                       nboot = 100)
 # print(sobol_result)
 # plot(sobol_result)

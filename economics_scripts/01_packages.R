@@ -19,6 +19,8 @@ suppressPackageStartupMessages({
   if (!require(nlme)) install.packages("nlme")
   if (!require(tidyr)) install.packages("tidyr")
   if (!require(kableExtra)) install.packages("kableExtra")
+  if (!require(lme4)) install.packages("lme4")
+  if (!require(emmeans)) install.packages("emmeans")
   
   library(dplyr) # for "glimpse" and data manipulation
   library(ggplot2) # general plotting
@@ -33,6 +35,8 @@ suppressPackageStartupMessages({
   library(nlme)
   library(tidyr) # pivot join df's 
   library(kableExtra)
+  library(lme4)
+  library(emmeans)
 })
 
 

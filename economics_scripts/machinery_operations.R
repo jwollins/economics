@@ -58,7 +58,7 @@ dat$diesel_consum_l_ha <- dat$diesel_consum_kg_ha / 0.835
 
 
 
-dat$power_kW = (dat$diesel_consum_l_ha * 10) / 0.40  # Using 40% efficiency
+dat$power_kW = (dat$diesel_consum_l_ha * 10) / 0.60  # Using 40% efficiency
 
 dat$power_HP = dat$power_kW * 1.341  # Convert kW to HP
 
@@ -83,7 +83,7 @@ head(dat)
 
 # Calculates mean, sd, se and IC - block
 TFC_sum <- dat %>%
-  group_by(treatment, year) %>%
+  group_by(treatment, year, crop) %>%
   summarise( 
     n = n(),
     tfc_sum = sum(tfc, na.rm = TRUE),
@@ -91,7 +91,12 @@ TFC_sum <- dat %>%
     time_per_ha_sum = sum(time_per_ha, na.rm = TRUE),
     total_working_time_sum = sum(total_working_time, na.rm = TRUE),
     diesel_consum_l_ha_sum = sum(diesel_consum_kg_ha, na.rm = TRUE)
-  )
+  ) %>% 
+  arrange(year)
+
+TFC_sum
+
+write.csv(x = TFC_sum, file = "data/processed_data/machinery_operation_summary.csv")
 
 
 

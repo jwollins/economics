@@ -47,14 +47,16 @@
 
 
 
+#_____________________________________________________####
+# Revenue ####
 
 
 
-## B - Revenue PLOT ####
+# ~ Gross Revenue PLOT ####
 
 # this is the legend title with correct notation
-title_exp <- expression(Revenue~('£'~ha^{-1})) 
-y_title <- expression(Revenue~('£'~ha^{-1}))
+title_exp <- expression(Gross~Revenue~('£'~ha^{-1})) 
+y_title <- expression(Gross~Revenue~('£'~ha^{-1}))
 
 
 rev_plot <- ggplot(data = rev_sum, 
@@ -64,6 +66,7 @@ rev_plot <- ggplot(data = rev_sum,
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
+  ylim(0,2300) +
   labs(
     x = "Crop",
     y = y_title, 
@@ -90,6 +93,104 @@ rev_plot
 
 
 
+# ~ grain revenue ####
+
+# this is the legend title with correct notation
+title_exp <- expression(Grain~Revenue~('£'~ha^{-1})) 
+y_title <- expression(Grain~Revenue~('£'~ha^{-1}))
+
+
+grain_rev_plot <- ggplot(data = grain_rev_sum, 
+                   aes(x = treatment, 
+                       y = mean, 
+                       fill = treatment)) + 
+  geom_bar(stat = "identity", 
+           color = "black", 
+           position = "dodge") + 
+  ylim(0,2300) +
+  labs(
+    x = "Crop",
+    y = y_title, 
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"), 
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_errorbar(aes(ymin=mean-se, 
+                    ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  facet_wrap(~ year, ncol = 4)
+
+
+grain_rev_plot
+
+
+
+
+# ~ straw revenue ####
+
+# this is the legend title with correct notation
+title_exp <- expression(Straw~Revenue~('£'~ha^{-1})) 
+y_title <- expression(Straw~Revenue~('£'~ha^{-1}))
+
+
+straw_rev_plot <- ggplot(data = straw_rev_sum, 
+                   aes(x = treatment, 
+                       y = mean, 
+                       fill = treatment)) + 
+  geom_bar(stat = "identity", 
+           color = "black", 
+           position = "dodge") + 
+  ylim(0,2300) +
+  labs(
+    x = "Crop",
+    y = y_title, 
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"), 
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_errorbar(aes(ymin=mean-se, 
+                    ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  facet_wrap(~ year, ncol = 4)
+
+
+straw_rev_plot
+
+
+
+
+
+# ~ joint revenue plot ####
+
+ggarrange(
+  grain_rev_plot, 
+  straw_rev_plot,
+  rev_plot,
+  ncol = 3, 
+  nrow = 1, 
+  labels = c("A", "B", "C"), 
+  legend = "bottom", 
+  common.legend = TRUE)
+
+
+ggsave(filename = "fig_revenue_joint_plot.png", 
+       path = "plots/", 
+       width = 12, 
+       height = 4)
 
 
 
@@ -97,7 +198,10 @@ rev_plot
 
 
 
-## C - Expenditure plot ####
+#________________________________________####
+# Expenditure ####
+
+# ~ Gross Expenditure ####
 
 
 # this is the legend title with correct notation
@@ -130,172 +234,7 @@ expenditure_plot
 
 
 
-
-
-
-
-
-
-
-
-
-## D - Gross Margin plot ####
-
-# this is the legend title with correct notation
-title_exp <- expression(Gross~Margin~('£'~ha^{-1})) 
-y_title <- expression(Gross~Margin~('£'~ha^{-1}))
-
-
-gm_plot <- ggplot(data = gm_sum, 
-                      aes(x = treatment, 
-                          y = mean, 
-                          fill = treatment)) + 
-  geom_bar(stat = "identity", 
-           color = "black", 
-           position = "dodge") + 
-  labs(
-    x = "Crop",
-    y = y_title, 
-    title = title_exp) +
-  theme_bw() +
-  scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                    name = "Treatment") +
-  theme(strip.text.x = element_text(size = 12, 
-                                    color = "black", 
-                                    face = "bold.italic"),
-        axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()) +
-  geom_errorbar(aes(ymin=mean-se, 
-                    ymax=mean+se),
-                width=.2,                    # Width of the error bars
-                position=position_dodge(.9)) +
-  facet_wrap(~ year, ncol = 3)
-
-gm_plot
-  
-
-
-
-
-
-
-## E - Net profit margin proportion plot ####
-
-# this is the legend title with correct notation
-title_exp <- expression(Net~Profit~Margin~('%')) 
-y_title <- expression(Net~Profit~Margin~('%')) 
-
-
-npm_plot <- ggplot(data = npm_sum, 
-                   aes(x = treatment, 
-                       y = mean, 
-                       fill = treatment)) + 
-  geom_bar(stat = "identity", 
-           color = "black", 
-           position = "dodge") + 
-  labs(
-    x = "Crop",
-    y = y_title, 
-    title = title_exp) +
-  theme_bw() +
-  scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                    name = "Treatment") +
-  theme(strip.text.x = element_text(size = 12, 
-                                    color = "black", 
-                                    face = "bold.italic"),
-        axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()) +
-  geom_errorbar(aes(ymin=mean-se, 
-                    ymax=mean+se),
-                width=.2,                    # Width of the error bars
-                position=position_dodge(.9)) +
-  facet_wrap(~ year, ncol = 3)
-
-
-
-
-npm_plot
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## NO STRAW Gross margin PLOT ####
-  
-  # this is the legend title with correct notation
-  title_exp <- expression(Grain~Profit~('£'~ha^{-1})) 
-  y_title <- expression(Grain~Profit~('£'~ha^{-1}))
-  
-  no_straw_plot <- ggplot(data = no_straw_sum, 
-                        aes(x = treatment, 
-                            y = mean, 
-                            fill = treatment)) + 
-    geom_bar(stat = "identity", 
-             color = "black", 
-             position = "dodge") + 
-    labs(
-      x = "Crop",
-      y = y_title, 
-      title = title_exp) +
-    theme_bw() +
-    scale_fill_manual(values=c("tomato2", "turquoise3"), 
-                      name = "Treatment") +
-    theme(strip.text.x = element_text(size = 12, 
-                                      color = "black", 
-                                      face = "bold.italic"),
-          axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank()) +
-    geom_errorbar(aes(ymin=mean-se, 
-                      ymax=mean+se),
-                  width=.2,                    # Width of the error bars
-                  position=position_dodge(.9)) +
-    facet_wrap(~ year, ncol = 3)
-  
-  no_straw_plot 
-  
-  
-  
- 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### OP EXPENDITURE PLOT ####
+# ~ Operation expenditure ####
 
 
 # this is the legend title with correct notation
@@ -303,9 +242,9 @@ title_exp <- expression(Operational~Expenditure~("£"~ha^{-1}))
 y_title <- expression(Expenditure~("£"~ha^{-1}))
 
 op_expenditure_plot <- ggplot(data = op_expenditure_sum, 
-                           aes(x = treatment, 
-                               y = mean, 
-                               fill = treatment)) + 
+                              aes(x = treatment, 
+                                  y = mean, 
+                                  fill = treatment)) + 
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
@@ -329,7 +268,7 @@ op_expenditure_plot
 
 
 
-### CROP EXPENDITURE PLOT ####
+# ~ application expenditure ####
 
 
 # this is the legend title with correct notation
@@ -337,9 +276,9 @@ title_exp <- expression(Crop~Expenditure~("£"~ha^{-1}))
 y_title <- expression(Expenditure~("£"~ha^{-1}))
 
 crop_expenditure_plot <- ggplot(data = crop_expenditure_sum, 
-                              aes(x = treatment, 
-                                  y = mean, 
-                                  fill = treatment)) + 
+                                aes(x = treatment, 
+                                    y = mean, 
+                                    fill = treatment)) + 
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
@@ -362,7 +301,7 @@ crop_expenditure_plot
 
 
 
-### grain EXPENDITURE PLOT ####
+# ~ grain expenditure ####
 
 
 # this is the legend title with correct notation
@@ -370,9 +309,9 @@ title_exp <- expression(Grain~Expenditure~("£"~ha^{-1}))
 y_title <- expression(Expenditure~("£"~ha^{-1}))
 
 grain_expenditure_plot <- ggplot(data = grain_expenditure_sum, 
-                                aes(x = treatment, 
-                                    y = mean, 
-                                    fill = treatment)) + 
+                                 aes(x = treatment, 
+                                     y = mean, 
+                                     fill = treatment)) + 
   geom_bar(stat = "identity", 
            color = "black", 
            position = "dodge") + 
@@ -399,49 +338,139 @@ grain_expenditure_plot
 
 
 
-## GRID PLOT ####
+#_______________________________________________####
+# Gross Margin ####
 
-# 1
-figure <- ggarrange(
-  #yield_plot, 
-          rev_plot,
-          expenditure_plot, 
-          gm_plot,
-          # npm_plot, 
+
+
+
+# ~ GM by year ####
+
+title_exp <- expression(Gross~Margin~('£'~ha^{-1}~year^{-1})) 
+y_title <- expression(Gross~Margin~('£'~ha^{-1}))
+
+
+gm_by_year <- 
+  ggplot(data = gm_sum, 
+                      aes(x = treatment, 
+                          y = mean, 
+                          fill = treatment)) + 
+  geom_bar(stat = "identity", 
+           color = "black", 
+           position = "dodge") + 
+  labs(
+    x = "Crop",
+    y = y_title, 
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"), 
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_errorbar(aes(ymin=mean-se, 
+                    ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  facet_wrap(~ year, ncol = 3)
+
+gm_by_year
+  
+
+
+
+
+
+# ~ grain & straw GM ####
+
+title_exp <- expression(Mean~Gross~Margin~('£'~ha^{-1})) 
+y_title <- expression(Gross~Margin~('£'~ha^{-1}))
+
+gm_by_treatment <- 
+  ggplot(data = gm_sum_no_year, 
+         aes(x = treatment, 
+             y = mean, 
+             fill = treatment)) + 
+  geom_bar(stat = "identity", 
+           color = "black", 
+           position = "dodge") + 
+  labs(
+    x = "Crop",
+    y = y_title, 
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"), 
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_errorbar(aes(ymin=mean-se, 
+                    ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) 
+
+gm_by_treatment
+
+
+
+
+
+
+# # ~ grain GM ####
+# 
+# title_exp <- expression(Total~Grain~Gross~Margin~('£'~ha^{-1})) 
+# y_title <- expression(Gross~Margin~('£'~ha^{-1}))
+# 
+# grain_gm_plot_no_year <- 
+#   ggplot(data = no_straw_sum_no_year, 
+#          aes(x = treatment, 
+#              y = mean, 
+#              fill = treatment)) + 
+#   geom_bar(stat = "identity", 
+#            color = "black", 
+#            position = "dodge") + 
+#   labs(
+#     x = "Crop",
+#     y = y_title, 
+#     title = title_exp) +
+#   theme_bw() +
+#   scale_fill_manual(values=c("tomato2", "turquoise3"), 
+#                     name = "Treatment") +
+#   theme(strip.text.x = element_text(size = 12, 
+#                                     color = "black", 
+#                                     face = "bold.italic"),
+#         axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank()) +
+#   geom_errorbar(aes(ymin=mean-se, 
+#                     ymax=mean+se),
+#                 width=.2,                    # Width of the error bars
+#                 position=position_dodge(.9)) 
+# 
+# 
+# grain_gm_plot_no_year
+
+
+
+
+# ~ joint plot ####
+
+ggarrange(gm_plot, 
+          # grain_gm_plot_no_year, 
+          gm_plot_no_year,
           ncol = 3, 
           nrow = 1, 
-          align = "v",
-          vjust = 1, 
           labels = c("A", "B", "C"), 
           legend = "bottom", 
-          common.legend = TRUE,
-          widths = 1,
-          heights = 1)
+          common.legend = TRUE)
 
-figure
-
-
-  # annotate_figure(figure,
-  #                 bottom = text_grob("Costs and returns are calculated for each treatment area separately.", 
-  #                                    color = "black",
-  #                                    hjust = 1, 
-  #                                    x = 1, 
-  #                                    face = "italic", 
-  #                                    size = 10))
-
-
-ggarrange(
-  rev_plot,
-  expenditure_plot, 
-  gm_plot,
-  ncol = 3, 
-  nrow = 1, 
-  labels = c("A", "B", "C"), 
-  legend = "bottom", 
-  common.legend = TRUE)
-
-
-ggsave(filename = "fig_rev_ex_gm_comparison.png", 
+ggsave(filename = "fig_GM_joint_plot.png", 
        path = "plots/", 
        width = 12, 
        height = 4)
@@ -449,22 +478,118 @@ ggsave(filename = "fig_rev_ex_gm_comparison.png",
 
 
 
-ggarrange(
-  crop_expenditure_plot,
-  op_expenditure_plot, 
-  grain_expenditure_plot,
-  ncol = 3, 
-  nrow = 1, 
-  labels = c("A", "B", "C"), 
-  legend = "bottom", 
-  common.legend = TRUE)
+#______________________________________________####
+# Net profit margin ####
 
-ggsave(filename = "fig_expenditure_breakdown.png", 
+
+
+
+# ~ NPM by year ####
+
+# this is the legend title with correct notation
+title_exp <- expression(Net~Profit~Margin~('%'~year^{-1}))
+y_title <- expression(Net~Profit~Margin~('%'))
+
+
+npm_by_year <- ggplot(data = npm_sum,
+                   aes(x = treatment,
+                       y = mean,
+                       fill = treatment)) +
+  geom_bar(stat = "identity",
+           color = "black",
+           position = "dodge") +
+  labs(
+    x = "Crop",
+    y = y_title,
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"),
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12,
+                                    color = "black",
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_errorbar(aes(ymin=mean-se,
+                    ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) +
+  facet_wrap(~ year, ncol = 3)
+
+
+npm_by_year
+
+
+
+# ~ NPM by treatment ####
+
+title_exp <- expression(Mean~Net~Profit~Margin~('%'))
+y_title <- expression(Net~Profit~Margin~('%'))
+
+npm_by_treatment <- ggplot(data = npm_sum_no_year,
+                   aes(x = treatment,
+                       y = mean,
+                       fill = treatment)) +
+  geom_bar(stat = "identity",
+           color = "black",
+           position = "dodge") +
+  labs(
+    x = "Crop",
+    y = y_title,
+    title = title_exp) +
+  theme_bw() +
+  scale_fill_manual(values=c("tomato2", "turquoise3"),
+                    name = "Treatment") +
+  theme(strip.text.x = element_text(size = 12,
+                                    color = "black",
+                                    face = "bold.italic"),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_errorbar(aes(ymin=mean-se,
+                    ymax=mean+se),
+                width=.2,                    # Width of the error bars
+                position=position_dodge(.9)) 
+
+
+npm_by_treatment
+
+
+
+
+
+
+#______________________________________________####
+
+# ~ joint GM & NPM plot ####
+
+ggarrange(gm_by_year, 
+          npm_by_year, 
+          gm_by_treatment, 
+          npm_by_treatment,
+          ncol = 2, 
+          nrow = 2, 
+          labels = c("A", "B", "C","D"), 
+          legend = "bottom", 
+          common.legend = TRUE)
+
+ggsave(filename = "fig_GM_NPM_joint_plot.png", 
        path = "plots/", 
-       width = 12, 
-       height = 4)
+       width = 10, 
+       height = 7)
 
 
+
+
+
+
+
+
+
+
+
+#____________________________________________####
 ## PROPORTIONS ####
 
 

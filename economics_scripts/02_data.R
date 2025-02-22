@@ -13,6 +13,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####
 # PACKAGES ####
 
+setwd(dir = "~/Documents/GitHub/economics/")
 source(file = "economics_scripts/01_packages.R")
 
 
@@ -344,6 +345,21 @@ write.csv(x = summary_dat,
 
 
 
+glimpse(summary_dat)
+
+
+
+
+
+
+# net profit margin tests
+
+summary_dat <- summary_dat %>%
+  mutate(net_profit_margin_winsorized = case_when(
+    net_profit_margin < quantile(net_profit_margin, 0.05, na.rm = TRUE) ~ quantile(net_profit_margin, 0.05, na.rm = TRUE),
+    net_profit_margin > quantile(net_profit_margin, 0.95, na.rm = TRUE) ~ quantile(net_profit_margin, 0.95, na.rm = TRUE),
+    TRUE ~ net_profit_margin
+  ))
 
 
 
@@ -355,6 +371,23 @@ write.csv(x = summary_dat,
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ####
 # SUMMARY STATS ####
 
+
+# ~~ GM ####
+
+# Calculates mean, sd, se and IC - block
+gm_sum_no_year <- 
+  summary_dat %>%
+  group_by(treatment) %>%
+  summarise( 
+    n = n(),
+    mean = mean(total_gm_ha),
+    sd = sd(total_gm_ha)
+  ) %>%
+  mutate( se = sd/sqrt(n))  %>%
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1)) 
+
+gm_sum_no_year
+
 # Calculates mean, sd, se and IC - block
 gm_sum <- 
   summary_dat %>%
@@ -365,8 +398,10 @@ gm_sum <-
     sd = sd(total_gm_ha)
   ) %>%
   mutate( se = sd/sqrt(n))  %>%
-  mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1)) %>%
+ arrange(year)  # Order by year
 
+gm_sum
 
 gm_sum[,3:ncol(gm_sum)] <- round(gm_sum[,3:ncol(gm_sum)], digits = 2)
 
@@ -418,6 +453,21 @@ no_straw_sum <- summary_dat %>%
 
 
 
+# Calculates mean, sd, se and IC - block
+no_straw_sum_no_year <- 
+  summary_dat %>%
+  group_by(treatment) %>%
+  summarise( 
+    n=n(),
+    mean=mean(grain_gm),
+    sd=sd(grain_gm)
+  ) %>%
+  mutate( se=sd/sqrt(n))  %>%
+  mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+
+no_straw_sum_no_year
+
+
 # ~~ Revenue summary ####
 
 # Calculates mean, sd, se and IC - block
@@ -429,7 +479,44 @@ rev_sum <- summary_dat %>%
     sd=sd(total_revenue_ha)
   ) %>%
   mutate( se=sd/sqrt(n))  %>%
-  mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+  mutate( ic=se * qt((1-0.05)/2 + .5, n-1)) %>%
+  arrange(year) 
+
+rev_sum
+
+names(summary_dat)
+
+# Calculates mean, sd, se and IC - block
+straw_rev_sum <- summary_dat %>%
+  group_by(treatment, year) %>%
+  summarise( 
+    n=n(),
+    mean=mean(straw_rev_ha),
+    sd=sd(straw_rev_ha)
+  ) %>%
+  mutate( se=sd/sqrt(n))  %>%
+  mutate( ic=se * qt((1-0.05)/2 + .5, n-1)) %>%
+  arrange(year) 
+
+straw_rev_sum
+
+
+# Calculates mean, sd, se and IC - block
+grain_rev_sum <- summary_dat %>%
+  group_by(treatment, year) %>%
+  summarise( 
+    n=n(),
+    mean=mean(grain_rev_ha),
+    sd=sd(grain_rev_ha)
+  ) %>%
+  mutate( se=sd/sqrt(n))  %>%
+  mutate( ic=se * qt((1-0.05)/2 + .5, n-1)) %>%
+  arrange(year) 
+
+grain_rev_sum
+
+
+
 
 
 
@@ -440,11 +527,27 @@ npm_sum <- summary_dat %>%
   group_by(treatment, year) %>%
   summarise( 
     n=n(),
-    mean=mean(net_profit_margin),
-    sd=sd(net_profit_margin)
+    mean=mean(net_profit_margin_winsorized),
+    sd=sd(net_profit_margin_winsorized)
   ) %>%
   mutate( se=sd/sqrt(n))  %>%
   mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+
+
+# Calculates mean, sd, se and IC - block
+npm_sum_no_year <- 
+  summary_dat %>%
+  group_by(treatment) %>%
+  summarise( 
+    n=n(),
+    mean=mean(net_profit_margin_winsorized),
+    sd=sd(net_profit_margin_winsorized)
+  ) %>%
+  mutate( se=sd/sqrt(n))  %>%
+  mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+
+npm_sum_no_year
+
 
 
 
@@ -467,7 +570,7 @@ yield_sum$crop.x <- factor(yield_sum$crop.x, levels = c("Spring Beans", "Winter 
 
 
 
-# ~~ EXPENDITURE ####
+# ~~ Total EXPENDITURE ####
 
 # Calculates mean, sd, se and IC - block
 expenditure_sum <- summary_dat %>%
@@ -478,7 +581,18 @@ expenditure_sum <- summary_dat %>%
     sd=sd(total_expenditure_ha)
   ) %>%
   mutate( se=sd/sqrt(n))  %>%
-  mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+  mutate( ic=se * qt((1-0.05)/2 + .5, n-1)) %>%
+  arrange(year) 
+
+expenditure_sum
+
+
+
+
+
+
+
+
 
 
 
@@ -496,25 +610,50 @@ op_expenditure_sum <- summary_dat %>%
     sd = sd(expenditure_Operation)
   ) %>%
   mutate( se = sd/sqrt(n))  %>%
-  mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1)) %>%
+  arrange(year) %>%  # Order by year
+  pivot_wider(names_from = treatment, values_from = mean) %>%  # Wide format to compare treatments
+  mutate(
+    percentage_difference = ((`Conventional` - `Conservation`) / `Conservation`) * 100
+  ) %>%
+  pivot_longer(cols = c(`Conservation`, `Conventional`), names_to = "treatment", values_to = "mean") %>%
+  arrange(year)  # <- This orders the output by year
 
+View(op_expenditure_sum)
 print(op_expenditure_sum)
 
 
 
 
-# ~~ CROP EXPENDITURE ####
+# ~~ AP EXPENDITURE ####
 
-# Calculates mean, sd, se and IC - block
+# Calculate mean, sd, se, IC, and percentage difference between treatments
 crop_expenditure_sum <- summary_dat %>%
   group_by(treatment, year) %>%
-  summarise( 
+  summarise(
     n = n(),
-    mean = mean(expenditure_Application),
-    sd = sd(expenditure_Application)
+    mean = mean(expenditure_Application, na.rm = TRUE),
+    sd = sd(expenditure_Application, na.rm = TRUE)
   ) %>%
-  mutate( se = sd/sqrt(n))  %>%
-  mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+  mutate(
+    se = sd / sqrt(n),
+    ic = se * qt((1 - 0.05) / 2 + 0.5, n - 1)
+  ) %>%
+  arrange(year) %>%  # Order by year
+  pivot_wider(names_from = treatment, values_from = mean) %>%  # Wide format to compare treatments
+  mutate(
+    percentage_difference = ((`Conventional` - `Conservation`) / `Conservation`) * 100
+  ) %>%
+  pivot_longer(cols = c(`Conservation`, `Conventional`), names_to = "treatment", values_to = "mean") %>%
+  arrange(year)  # <- This orders the output by year
+
+# Display result
+crop_expenditure_sum
+
+
+
+
+
 
 
 
@@ -532,9 +671,10 @@ grain_expenditure_sum <- summary_dat %>%
     sd = sd(grain_expenditure_total_ha)
   ) %>%
   mutate( se = sd/sqrt(n))  %>%
-  mutate( ic = se * qt((1-0.05)/2 + .5, n-1))
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1)) %>%
+  arrange(year)  # <- This orders the output by year
 
-
+grain_expenditure_sum
 
 
 # ~~ Expenditure propotions ####

@@ -151,6 +151,60 @@ ggsave(filename = "plots/mode_diagnostics/model_diag_total_expenditure_glmer.png
 
 
 
+# ~ NPM ####
+
+
+
+# Shift the data to ensure positivity
+dat$total_npm_ha_shifted <- dat$net_profit_margin - min(dat$net_profit_margin) + 1
+
+# Plot the transformed distribution
+distribution_plots(data = dat, 
+                   variable = dat$total_npm_ha_shifted, 
+                   colour = dat$total_npm_ha_ha_shifted)
+
+ggsave(filename = "plots/distributions/dist_NPM.png", width = 10, height = 2.25)
+
+
+glm_model <- glmer(formula = total_npm_ha_shifted ~ treatment + (1 | year) + (1 | crop.x), 
+                   data = dat, 
+                   family = Gamma(link = "inverse"))
+
+# View summary
+summary(glm_model)
+
+# Run pairwise comparisons for the 'Treatment' factor
+pairwise_comparisons <- emmeans(glm_model, pairwise ~ treatment)
+
+# View the results of pairwise comparisons
+summary(pairwise_comparisons)
+
+
+diagnostic_plots_glm(model = glm_model)
+
+ggsave(filename = "plots/mode_diagnostics/model_diag_NPM_glmer.png", width = 10, height = 3.5)
+
+
+# get the contrast in non-inverse scale 
+
+# Regrid emmeans to response scale
+em_response <- regrid(emmeans(glm_model, ~ treatment, type = "response"))
+
+# Now calculate contrasts on the response scale
+contrast_response <- contrast(em_response, method = "pairwise")
+
+# Display result
+summary(contrast_response)
+
+
+
+
+
+
+
+
+
+
 
 ## ~~ Crop Expenditure ####
 

@@ -485,7 +485,10 @@ ggsave(filename = "fig_grain_gm_by_year.png", path = "plots/")
 # PROPORTIONS ####
 
 
-## ~ DATA ####
+# ~ DATA ####
+
+
+## ~~ by year ####
 
 prop_dat <- read.csv(file = "data/processed_data/expen_and_revenue_proportions.csv")
 
@@ -501,7 +504,13 @@ total_prop <- read.csv(file = "data/processed_data/total_proportion.csv")
 
 
 
-## ~ applications ####
+
+
+# ~ By year ####
+
+
+
+## ~~ applications ####
     
 a <-    ggplot(data = app_prop_dat, 
            aes(x = Treatment, 
@@ -528,7 +537,7 @@ a <-    ggplot(data = app_prop_dat,
 
 
     
-    ## ~ operations ####
+## ~~ operations ####
   
 b <-    ggplot(data = op_prop_dat, 
            aes(x = Treatment, 
@@ -555,7 +564,7 @@ b <-    ggplot(data = op_prop_dat,
 
 
     
-## ~ total proportion ####
+## ~~ total proportion ####
 
 c <-
 ggplot(data = total_prop, 
@@ -580,10 +589,10 @@ ggplot(data = total_prop,
   facet_wrap(~ year) +
   guides(fill = guide_legend(nrow = 3))
     
-    
+c
 
 
-## ~ joint plot ####
+## ~~ joint plot ####
 
 ggarrange(a,b,c, 
           ncol = 3, 
@@ -591,7 +600,119 @@ ggarrange(a,b,c,
           labels = c("A","B","C"), align = "h")
 
 
-ggsave(filename = "plots/fig_economic_proportions.png", width = 11, height = 6)
+ggsave(filename = "plots/proportions/fig_economic_proportions.png", width = 11, height = 6)
+
+
+
+
+
+
+
+
+# ~ By year ####
+
+
+
+## ~~ applications ####
+
+a <-    ggplot(data = app_prop_dat, 
+               aes(x = Treatment, 
+                   y = proportion, 
+                   fill = Category)) + 
+  geom_bar(stat = "identity", 
+           position = "fill") + 
+  ylim(0,1) +
+  labs(
+    x = "Treatment",
+    y = expression(Proportion~('%')),
+    subtitle = expression(Proportion~of~Application~Expenditure~('%'))) +
+  theme_bw() +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"), 
+        legend.position="bottom", 
+        legend.title = element_blank(), 
+        # legend.text = element_text(size = 7),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(nrow = 3))
+
+
+
+
+## ~~ operations ####
+
+b <-    ggplot(data = op_prop_dat, 
+               aes(x = Treatment, 
+                   y = proportion, 
+                   fill = Category)) + 
+  geom_bar(stat = "identity", 
+           position = "fill") + 
+  ylim(0,1) +
+  labs(
+    x = "Treatment",
+    y = expression(Proportion~('%')),
+    subtitle = expression(Proportion~of~Operations~Expenditure~('%'))) +
+  theme_bw() +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"), 
+        legend.position="bottom", 
+        legend.title = element_blank(), 
+        # legend.text = element_text(size = 7),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(nrow = 3))
+
+
+
+
+## ~~ total proportion ####
+
+c <-
+  ggplot(data = total_prop, 
+         aes(x = Treatment, 
+             y = proportion, 
+             fill = Type)) + 
+  geom_bar(stat = "identity", 
+           position = "fill") + 
+  ylim(0,1) +
+  labs(
+    x = "Treatment",
+    y = expression(Proportion~('%')),
+    subtitle = expression(Proportion~of~Revenue~('%'))) +
+  theme_bw() +
+  theme(strip.text.x = element_text(size = 12, 
+                                    color = "black", 
+                                    face = "bold.italic"), 
+        legend.position="bottom", 
+        legend.title = element_blank(), 
+        # legend.text = element_text(size = 7),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(nrow = 3))
+
+
+
+
+## ~~ joint plot ####
+
+ggarrange(a,b,c, 
+          ncol = 3, 
+          legend = "bottom", 
+          labels = c("A","B","C"), align = "h")
+
+
+ggsave(filename = "plots/proportions/fig_economic_proportions_treat.png", width = 11, height = 6)
+
+
+
+
+
+ggarrange(a,b, 
+          ncol = 2, 
+          legend = "bottom", 
+          labels = c("A","B"), align = "h")
+
+
+ggsave(filename = "plots/proportions/fig_economic_proportions_treat_2.png", width = 10, height = 5)
 
     
 

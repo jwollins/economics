@@ -3188,23 +3188,28 @@ sensitivity_results <- sim_all %>%
 # Check for any NA values
 sensitivity_results
 
-sensitivity_results$Variable[3] <- "Climate\nShock\nFactor"
-sensitivity_results$Variable[6] <- "Climate\nShock\nFactor"
+sensitivity_results$Variable[3] <- "Climate Shock Factor"
+sensitivity_results$Variable[6] <- "Climate Shock Factor"
+
 
 sensitivity_plot <- 
   ggplot(data = sensitivity_results, 
          aes(y = reorder(Variable, Effect), 
-             x = Effect)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
+             x = Effect, 
+             fill = System)) +
+  geom_bar(stat = "identity",
+           color = "black",
+           position = "dodge") +
+  scale_fill_manual(values = c("turquoise3", "tomato2"), 
+                    name = "Treatment") +
   coord_flip() +
-  facet_wrap(~ System) +
   labs(
     y = "Input Variable",
-    x = expression("Effect on Gross Margin (" ~ "£ ha"^{-1} ~ ")") 
+    x = expression("Effect on Gross Margin (" ~ "£ ha"^{-1} ~ ")")
   ) +
   theme_bw() + 
-  theme(legend.position = "bottom",  
-        strip.text.x = element_text(size = 12, face = "bold.italic"))
+  theme(legend.position = "bottom")
+
 
 
 sensitivity_plot

@@ -696,6 +696,9 @@ crop_expenditure_sum <- app_dat %>%
 # ~~~~~~~~~~ ####
 # ~ PROPORTIONS ####
 
+
+# ~~ By year ####
+
 app_proportions <- 
   app_dat %>%
   group_by(Treatment, year, Category, Type) %>%
@@ -718,6 +721,8 @@ combined_proportions <- rbind(app_proportions[,1:5], op_proportions[,1:5])
 
 glimpse(combined_proportions)
 glimpse(gm_sum)
+
+op_ap_proportions <- combined_proportions
 
 
 # Add the revenue data as rows with Category set to "Profit"
@@ -763,4 +768,48 @@ write.csv(x = total_proportion, file = "data/processed_data/total_proportion.csv
 
 
 
+# ~~ summary statisitcs ####
 
+# ~~ applications ####
+
+names(app_proportions)
+
+# Calculates mean, sd, se and IC - block
+app_proportions_sum <- 
+  app_proportions %>%
+  group_by(Treatment, Category) %>%
+  summarise( 
+    n = n(),
+    mean = mean(proportion),
+    sd = sd(proportion)
+  ) %>%
+  mutate( se = sd/sqrt(n))  %>%
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1)) %>% 
+  arrange(Treatment, mean)
+
+View(app_proportions_sum)
+
+sum(app_proportions_sum$mean)
+
+
+
+# ~~ operations ####
+
+names(op_proportions)
+
+# Calculates mean, sd, se and IC - block
+op_proportions_sum <- 
+  op_proportions %>%
+  group_by(Treatment, Category) %>%
+  summarise( 
+    n = n(),
+    mean = mean(proportion),
+    sd = sd(proportion)
+  ) %>%
+  mutate( se = sd/sqrt(n))  %>%
+  mutate( ic = se * qt((1-0.05)/2 + .5, n-1)) %>% 
+  arrange(Treatment, mean)
+
+View(op_proportions_sum)
+
+sum(op_proportions_sum$mean)

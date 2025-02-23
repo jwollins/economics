@@ -482,6 +482,9 @@ ggsave(filename = "fig_GM_joint_plot.png",
 # Net profit margin ####
 
 
+glimpse(npm_sum_no_year)
+
+print(npm_sum)
 
 
 # ~ NPM by year ####
@@ -625,6 +628,7 @@ crop_prop_plot <- ggplot(data = app_dat,
 
 
 
+crop_prop_plot
 
 
 
@@ -656,6 +660,9 @@ op_prop_plot <-ggplot(data = op_dat,
   facet_wrap(~ crop ) + 
   guides(fill = guide_legend(nrow = 2,
                              byrow = TRUE))
+
+
+op_prop_plot
 
 
 
